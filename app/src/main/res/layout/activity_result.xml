@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Result">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/rectangle_color">
+
+        <RelativeLayout
+            android:id="@+id/circles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-100dp"
+            android:layout_marginTop="-100dp"
+            >
+
+            <View
+                android:id="@+id/circle1"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginStart="80dp"
+                android:layout_marginTop="0dp"
+                android:alpha="0.43"
+                android:background="@drawable/circle" />
+
+            <View
+                android:id="@+id/circle2"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="80dp"
+                android:alpha="0.43"
+                android:background="@drawable/circle" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:text="WYNIK:"
+                android:layout_margin="20dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:text="20/30"
+                android:layout_margin="20dp"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/end_quiz"
+            android:layout_width="280dp"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerInParent="true"
+            android:layout_marginBottom="50dp"
+            android:text="zakończ" />
+
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
