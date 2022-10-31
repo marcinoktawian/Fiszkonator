@@ -13,6 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/question_number"
             android:text="1/30"
             android:textSize="16sp"
             android:layout_alignParentRight="true"
@@ -51,6 +52,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/question"
                 android:gravity="center"
                 android:text="Q1: Co to jest podwójna ślepa próba"
                 android:textSize="24sp"
@@ -59,39 +61,42 @@
 
             <RadioGroup
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <RadioButton
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Rzucanie strzykawką w model człowieka"
-                    android:textSize="18sp"/>
-                <RadioButton
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Przelatywanie na ślepo po encyklopedii chorób"
-                    android:textSize="18sp"/>
-                <RadioButton
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Dwóch chirurgów przy EKG"
-                    android:textSize="18sp"/>
-                <RadioButton
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Student na egzaminie"
-                    android:textSize="18sp"/>
+                android:layout_height="wrap_content"
+                android:id="@+id/answers">
+
             </RadioGroup>
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/next_question"
-            android:layout_width="280dp"
-            android:layout_height="50dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerInParent="true"
-            android:layout_marginBottom="50dp"
-            android:text="Dalej" />
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/next_question"
+                android:onClick="nextQuestionButton"
+                android:layout_width="280dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="10dp"
+                android:text="Dalej" />
+
+            <Button
+                android:id="@+id/check_question"
+                android:layout_width="280dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="30dp"
+                android:text="Sprawdź" />
+
+        </LinearLayout>
+
+
 
     </RelativeLayout>
 

@@ -23,21 +23,16 @@ public class CategoryList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category_list);
-        createCategoryList();
-    }
-
-//    public void go_to_settings(View view) {
-//        Intent activity2Intent = new Intent(getApplicationContext(), QuizSettings.class);
-//        startActivity(activity2Intent);
-//    }
-
-    public void createCategoryList(){
         dbHeplper = new DatabaseHelper(getApplicationContext());
         try {
             dbHeplper.createDataBase();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        createCategoryList();
+    }
+
+    public void createCategoryList(){
         List<String> listCategories = dbHeplper.getAllSubjects();
         Integer id = 1;
         for (String subject : listCategories){
@@ -64,6 +59,7 @@ public class CategoryList extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), QuizSettings.class);
                 intent.putExtra("id", "" + newId);
+                intent.putExtra("name", "" + categoryName);
                 startActivity(intent);
             }
         });

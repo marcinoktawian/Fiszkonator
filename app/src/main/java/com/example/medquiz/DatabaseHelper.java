@@ -135,4 +135,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return listUsers;
     }
+
+    public Integer getQuestionsNumber(String idPrzedmiotu){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor c;
+        String TB_NAME = "Pytanie";
+        String countStr="0";
+
+        try {
+            c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " WHERE IdPrzedmiotu = " + idPrzedmiotu , null);
+            if(c == null) return null;
+
+            c.moveToFirst();
+            countStr = c.getString(0);
+            c.close();
+        } catch (Exception e) {
+            Log.e("tle99", e.getMessage());
+            Log.e("hello",DB_PATH);
+        }
+        db.close();
+        return Integer.parseInt(countStr);
+    }
+
+    public Cursor getQuestions(String idPrzedmiotu, String limit){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor c = null;
+
+        try {
+            c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+            if(c == null) return null;
+        } catch (Exception e) {
+            Log.e("tle99", e.getMessage());
+            Log.e("hello",DB_PATH);
+        }
+        db.close();
+        return c;
+    }
+
 }
