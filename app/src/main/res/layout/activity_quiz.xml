@@ -76,23 +76,23 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/check_question"
+                android:layout_width="280dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="10dp"
+                android:text="Sprawdź" />
+
+            <Button
                 android:id="@+id/next_question"
                 android:onClick="nextQuestionButton"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerInParent="true"
-                android:layout_marginBottom="10dp"
-                android:text="Dalej" />
-
-            <Button
-                android:id="@+id/check_question"
-                android:layout_width="280dp"
-                android:layout_height="50dp"
-                android:layout_alignParentBottom="true"
-                android:layout_centerInParent="true"
                 android:layout_marginBottom="30dp"
-                android:text="Sprawdź" />
+                android:text="Dalej" />
 
         </LinearLayout>
 

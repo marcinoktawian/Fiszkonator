@@ -1,6 +1,7 @@
 package com.example.medquiz;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -8,8 +9,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -20,11 +25,13 @@ public class Quiz extends AppCompatActivity {
     String indexStr;
     String categoryName;
     Boolean random;
+    Boolean training;
     Integer index = 0;
     Integer correctAnswersCounts = 0;
     Cursor questions;
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
+    Boolean answerAlreadyChecked;
 
 
     @Override
@@ -47,20 +54,38 @@ public class Quiz extends AppCompatActivity {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
                 categoryName = extrasBundle.getString("name");
                 random = extrasBundle.getBoolean("random");
+                training = extrasBundle.getBoolean("training");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
+            training = (Boolean) savedInstanceState.getSerializable("training");
         }
 
         questions = this.getQuestions(categoryName, indexStr);
         questions.moveToFirst();
         setQuestion();
         setQuestionNumber();
+
+        final Button checkButton= findViewById(R.id.check_question);
+        if (training){
+            checkButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    checkAnswer(true);
+                }
+            });
+        }else{
+            ViewGroup layout = (ViewGroup) checkButton.getParent();
+            if(null!=layout) //for safety only  as you are doing onClick
+                layout.removeView(checkButton);
+
+        }
+
     }
 
     public void setQuestion() {
+        answerAlreadyChecked = false;
         String trescPytania = questions.getString(2);
         TextView questionTextView = (TextView) findViewById(R.id.question);
         questionTextView.setText(trescPytania);
@@ -76,14 +101,14 @@ public class Quiz extends AppCompatActivity {
                 answerRadioButton.setId(item);
                 answerRadioButton.setText(answer);
                 answerRadioButton.setTextSize(20);
-                answerRadioButton.setPadding(20,10,20,10);
+                answerRadioButton.setPadding(20, 10, 20, 10);
                 answersGroup.addView(answerRadioButton);
             }
         }
     }
 
     public void nextQuestionButton(View view) {
-        checkAnswer();
+        checkAnswer(false);
         if (index == Integer.parseInt(indexStr)) {
             db.close();
             Intent intent = new Intent(getApplicationContext(), Result.class);
@@ -108,9 +133,9 @@ public class Quiz extends AppCompatActivity {
         Cursor c = null;
 
         try {
-            if (random){
+            if (random) {
                 c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
-            }else {
+            } else {
                 c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
             }
             if (c == null) return null;
@@ -120,13 +145,30 @@ public class Quiz extends AppCompatActivity {
         return c;
     }
 
-    public void checkAnswer() {
+    public void checkAnswer(Boolean highlight) {
         String correctAnswer;
         correctAnswer = questions.getString(8);
         RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
         int checkedRadioButtonId = answersGroup.getCheckedRadioButtonId();
-        if (Integer.parseInt(correctAnswer) == checkedRadioButtonId) {
+        if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
             correctAnswersCounts++;
+            answerAlreadyChecked = true;
+        }
+        if (highlight) {
+            if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !answerAlreadyChecked) {
+                correctAnswersCounts++;
+            }
+            answerAlreadyChecked = true;
+            for (int item = 1; item <= 5; item++) {
+                RadioButton answerRadioButton = (RadioButton) findViewById(item);
+                if (answerRadioButton != null) {
+                    if(item == Integer.parseInt(correctAnswer)) {
+                         answerRadioButton.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.correct_answer));
+                    }else{
+                        answerRadioButton.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.wrong_answer));
+                    }
+                }
+            }
         }
     }
 }

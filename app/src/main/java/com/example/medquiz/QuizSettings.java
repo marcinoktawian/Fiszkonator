@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class QuizSettings extends AppCompatActivity {
 
@@ -61,6 +62,7 @@ public class QuizSettings extends AppCompatActivity {
         Integer questionsNumber = dbHelper.getQuestionsNumber(indexStr);
         Integer[] items = new Integer[questionsNumber];
         Arrays.setAll(items, i -> i+1);
+        Arrays.sort(items, Collections.reverseOrder());
         ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(this,android.R.layout.simple_spinner_item, items);
         mspin.setAdapter(adapter);
     }
@@ -69,12 +71,14 @@ public class QuizSettings extends AppCompatActivity {
         final Button button = findViewById(R.id.start_quiz);
         Spinner numbersSpinner = (Spinner) findViewById(R.id.spinner_questions_number);
         Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
+        Switch trainingSwitch = (Switch) findViewById(R.id.training_switch);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
                 intent.putExtra("numbersOfQuestions", "" + numbersSpinner.getSelectedItem());
                 intent.putExtra("name", categoryName);
                 intent.putExtra("random", randomSwitch.isChecked());
+                intent.putExtra("training", trainingSwitch.isChecked());
                 startActivity(intent);
             }
         });
