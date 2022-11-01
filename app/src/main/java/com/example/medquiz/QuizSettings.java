@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Checkable;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -66,11 +68,13 @@ public class QuizSettings extends AppCompatActivity {
     public void startQuizClick(){
         final Button button = findViewById(R.id.start_quiz);
         Spinner numbersSpinner = (Spinner) findViewById(R.id.spinner_questions_number);
+        Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
                 intent.putExtra("numbersOfQuestions", "" + numbersSpinner.getSelectedItem());
-                intent.putExtra("name", "" + categoryName);
+                intent.putExtra("name", categoryName);
+                intent.putExtra("random", randomSwitch.isChecked());
                 startActivity(intent);
             }
         });

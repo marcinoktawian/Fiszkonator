@@ -8,10 +8,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -21,8 +19,9 @@ public class Quiz extends AppCompatActivity {
     Bundle extrasBundle;
     String indexStr;
     String categoryName;
-    Integer index = 1;
-    Integer correctAnswers = 0;
+    Boolean random;
+    Integer index = 0;
+    Integer correctAnswersCounts = 0;
     Cursor questions;
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
@@ -47,10 +46,12 @@ public class Quiz extends AppCompatActivity {
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
                 categoryName = extrasBundle.getString("name");
+                random = extrasBundle.getBoolean("random");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
             categoryName = (String) savedInstanceState.getSerializable("name");
+            random = (Boolean) savedInstanceState.getSerializable("random");
         }
 
         questions = this.getQuestions(categoryName, indexStr);
@@ -60,43 +61,46 @@ public class Quiz extends AppCompatActivity {
     }
 
     public void setQuestion() {
-        questions.moveToNext();
         String trescPytania = questions.getString(2);
         TextView questionTextView = (TextView) findViewById(R.id.question);
         questionTextView.setText(trescPytania);
 
         RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
+        answersGroup.removeAllViews();
         String answer;
 
-        for (int item = 1; item <=5; item++){
+        for (int item = 1; item <= 5; item++) {
             answer = questions.getString(item + 2);
-            if(answer != null){
+            if (answer != null) {
                 RadioButton answerRadioButton = new RadioButton(getApplicationContext());
                 answerRadioButton.setId(item);
                 answerRadioButton.setText(answer);
+                answerRadioButton.setTextSize(20);
+                answerRadioButton.setPadding(20,10,20,10);
                 answersGroup.addView(answerRadioButton);
             }
         }
-
-        questions.moveToNext();
     }
 
     public void nextQuestionButton(View view) {
-        if (index == Integer.getInteger(indexStr)){
+        checkAnswer();
+        if (index == Integer.parseInt(indexStr)) {
             db.close();
             Intent intent = new Intent(getApplicationContext(), Result.class);
-            intent.putExtra("result", correctAnswers + "/" + indexStr);
+            intent.putExtra("result", correctAnswersCounts + "/" + indexStr);
             startActivity(intent);
-        }else{
+        } else {
+            questions.moveToNext();
             setQuestionNumber();
+            setQuestion();
         }
 
     }
 
     public void setQuestionNumber() {
+        index++;
         TextView countingTextView = (TextView) findViewById(R.id.question_number);
         countingTextView.setText(index + "/" + indexStr);
-        index++;
     }
 
     public Cursor getQuestions(String idPrzedmiotu, String limit) {
@@ -104,11 +108,25 @@ public class Quiz extends AppCompatActivity {
         Cursor c = null;
 
         try {
-            c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+            if (random){
+                c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+            }else {
+                c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+            }
             if (c == null) return null;
         } catch (Exception e) {
             Log.e("tle99", e.getMessage());
         }
         return c;
+    }
+
+    public void checkAnswer() {
+        String correctAnswer;
+        correctAnswer = questions.getString(8);
+        RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
+        int checkedRadioButtonId = answersGroup.getCheckedRadioButtonId();
+        if (Integer.parseInt(correctAnswer) == checkedRadioButtonId) {
+            correctAnswersCounts++;
+        }
     }
 }
