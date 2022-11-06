@@ -23,6 +23,7 @@ public class Quiz extends AppCompatActivity {
 
     Bundle extrasBundle;
     String indexStr;
+    String year;
     String categoryName;
     Boolean random;
     Boolean training;
@@ -52,18 +53,20 @@ public class Quiz extends AppCompatActivity {
                 indexStr = null;
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
+                year = extrasBundle.getString("year");
                 categoryName = extrasBundle.getString("name");
                 random = extrasBundle.getBoolean("random");
                 training = extrasBundle.getBoolean("training");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
+            year = (String) savedInstanceState.getSerializable("year");
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
             training = (Boolean) savedInstanceState.getSerializable("training");
         }
 
-        questions = this.getQuestions(categoryName, indexStr);
+        questions = this.getQuestions(categoryName, indexStr, year);
         questions.moveToFirst();
         setQuestion();
         setQuestionNumber();
@@ -128,15 +131,25 @@ public class Quiz extends AppCompatActivity {
         countingTextView.setText(index + "/" + indexStr);
     }
 
-    public Cursor getQuestions(String idPrzedmiotu, String limit) {
+    public Cursor getQuestions(String idPrzedmiotu, String limit, String year) {
         db = dbHelper.getWritableDatabase();
         Cursor c = null;
 
         try {
             if (random) {
-                c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                if (year.equals("ALL")){
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                }else{
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
+                }
+
             } else {
-                c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                if (year.equals("ALL")){
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                } else {
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " LIMIT " + limit, null);
+                }
+
             }
             if (c == null) return null;
         } catch (Exception e) {

@@ -165,7 +165,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<String> listYears = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
-
+        listYears.add("ALL");
         try {
             c = db.rawQuery("SELECT DISTINCT rok FROM Pytanie WHERE IdPrzedmiotu = " + idPrzedmiotu, null);
             if(c == null) return null;
