@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class QuizSettings extends AppCompatActivity {
 
@@ -53,18 +54,33 @@ public class QuizSettings extends AppCompatActivity {
         TextView tytulTextView = (TextView) findViewById(R.id.setting_tittle);
         tytulTextView.setText(categoryName +"\nUstawienia");
 
-        setSpinner();
+        setYearSpinner();
         startQuizClick();
     }
 
     public void setSpinner(){
         Spinner mspin = (Spinner) findViewById(R.id.spinner_questions_number);
-        Integer questionsNumber = dbHelper.getQuestionsNumber(indexStr);
+        Spinner yearSpinner = (Spinner) findViewById(R.id.spinner_year);
+        Integer questionsNumber;
+        if(yearSpinner.getSelectedItem() == "ALL"){
+            questionsNumber = dbHelper.getQuestionsNumber(indexStr, "");
+        }else{
+            questionsNumber = dbHelper.getQuestionsNumber(indexStr, "" + yearSpinner.getSelectedItem());
+        }
+
         Integer[] items = new Integer[questionsNumber];
         Arrays.setAll(items, i -> i+1);
         Arrays.sort(items, Collections.reverseOrder());
         ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(this,android.R.layout.simple_spinner_item, items);
         mspin.setAdapter(adapter);
+    }
+
+    public void setYearSpinner(){
+        Spinner mspin = (Spinner) findViewById(R.id.spinner_year);
+        List<String> questionsYears = dbHelper.getQuestionsYears(indexStr);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, questionsYears);
+        mspin.setAdapter(adapter);
+        setSpinner();
     }
 
     public void startQuizClick(){

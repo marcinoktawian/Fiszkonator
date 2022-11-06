@@ -136,14 +136,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listUsers;
     }
 
-    public Integer getQuestionsNumber(String idPrzedmiotu){
+    public Integer getQuestionsNumber(String idPrzedmiotu, String year){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
         String TB_NAME = "Pytanie";
         String countStr="0";
 
         try {
-            c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " WHERE IdPrzedmiotu = " + idPrzedmiotu , null);
+            if (year == "") {
+                c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " WHERE IdPrzedmiotu = " + idPrzedmiotu, null);
+            } else {
+                c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " WHERE IdPrzedmiotu = " + idPrzedmiotu + " AND rok = " + year, null);
+            }
             if(c == null) return null;
 
             c.moveToFirst();
@@ -157,19 +161,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return Integer.parseInt(countStr);
     }
 
-    public Cursor getQuestions(String idPrzedmiotu, String limit){
+    public List<String> getQuestionsYears(String idPrzedmiotu){
+        List<String> listYears = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor c = null;
+        Cursor c;
 
         try {
-            c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+            c = db.rawQuery("SELECT DISTINCT rok FROM Pytanie WHERE IdPrzedmiotu = " + idPrzedmiotu, null);
             if(c == null) return null;
+
+            String name;
+            c.moveToFirst();
+            do {
+                name = c.getString(0);
+                listYears.add(name);
+            } while (c.moveToNext());
+            c.close();
         } catch (Exception e) {
             Log.e("tle99", e.getMessage());
             Log.e("hello",DB_PATH);
         }
+
         db.close();
-        return c;
+
+        return listYears;
     }
 
 }
