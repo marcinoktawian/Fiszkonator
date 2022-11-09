@@ -14,25 +14,13 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    DatabaseHelper dbHeplper;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final Button button = findViewById(R.id.start_button);
-//        dbHeplper = new DatabaseHelper(getApplicationContext());
-//        try {
-//            dbHeplper.createDataBase();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        List<String> listUsers = dbHeplper.getAllSubjects();
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-//                for (String subject : listUsers){
-//                    Toast.makeText(getBaseContext(), subject, Toast.LENGTH_SHORT ).show();
-//                }
                 Intent activity2Intent = new Intent(getApplicationContext(), CategoryList.class);
                 startActivity(activity2Intent);
             }

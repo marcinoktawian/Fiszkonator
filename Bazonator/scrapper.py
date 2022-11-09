@@ -149,9 +149,26 @@ def create_question(conn, question):
     return cur.lastrowid
 
 
+def create_stats(conn, stats):
+    sql = """ INSERT INTO Statystyki(IdPytania,IloscBlednychOdp,IloscPrawidlowychOdp,CzyNauczone)
+              VALUES(?,?,?,?) """
+    cur = conn.cursor()
+    cur.execute(sql, stats)
+    conn.commit()
+    return cur.lastrowid
+
+
+def get_last_row_num(conn, table):
+    sql = "select seq from sqlite_sequence where name = ?"
+    cur = conn.cursor()
+    cur.execute(sql, (table,))
+    result = cur.fetchall()
+    return result[0][0]
+
+
 def main():
-    pdfName = "Zakazy/2019/Zakazy2019.pdf"
-    year = 2019
+    pdfName = "Zakazy/2020/Zakazy2020.pdf"
+    year = 2020
     database = "MedBaza.db"
     subjectId = 1
 
@@ -159,9 +176,11 @@ def main():
     questions = get_questions_from_pdf(pdfName)
     c = create_connection(database)
     with c:
+        IndexPytanie = get_last_row_num(c, "Pytanie")
         # subject = (subjectId, subjectName)
         # create_subject(c, subject)
         for question in questions:
+            IndexPytanie = IndexPytanie + 1
             pytanie = (
                 subjectId,
                 question["Pytanie"],
@@ -173,7 +192,7 @@ def main():
                 year,
             )
             create_question(c, pytanie)
-    # print(questions)
+            create_stats(c, (IndexPytanie, 0, 0, 0))
 
 
 if __name__ == "__main__":

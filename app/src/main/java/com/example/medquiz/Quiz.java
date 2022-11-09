@@ -3,6 +3,7 @@ package com.example.medquiz;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -33,6 +34,7 @@ public class Quiz extends AppCompatActivity {
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
     Boolean answerAlreadyChecked;
+    String questionId;
 
 
     @Override
@@ -46,6 +48,7 @@ public class Quiz extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        db = dbHelper.getWritableDatabase();
 
         if (savedInstanceState == null) {
             extrasBundle = getIntent().getExtras();
@@ -89,6 +92,7 @@ public class Quiz extends AppCompatActivity {
 
     public void setQuestion() {
         answerAlreadyChecked = false;
+        questionId = questions.getString(0);
         String trescPytania = questions.getString(2);
         TextView questionTextView = (TextView) findViewById(R.id.question);
         questionTextView.setText(trescPytania);
@@ -132,7 +136,6 @@ public class Quiz extends AppCompatActivity {
     }
 
     public Cursor getQuestions(String idPrzedmiotu, String limit, String year) {
-        db = dbHelper.getWritableDatabase();
         Cursor c = null;
 
         try {
@@ -158,6 +161,34 @@ public class Quiz extends AppCompatActivity {
         return c;
     }
 
+    public void upgradeError(){
+        Cursor cursor =db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
+        int cardnum=0;
+        cursor.moveToFirst();
+        if( cursor != null )
+        {
+            cardnum = cursor.getInt(0);
+            cardnum++;
+        }
+        ContentValues values = new ContentValues();
+        values.put("IloscBlednychOdp",cardnum);
+        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+    }
+
+    public void upgradeCorrect(){
+        Cursor cursor =db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
+        int cardnum=0;
+        cursor.moveToFirst();
+        if( cursor != null )
+        {
+            cardnum = cursor.getInt(0);
+            cardnum++;
+        }
+        ContentValues values = new ContentValues();
+        values.put("IloscPrawidlowychOdp",cardnum);
+        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+    }
+
     public void checkAnswer(Boolean highlight) {
         String correctAnswer;
         correctAnswer = questions.getString(8);
@@ -165,7 +196,11 @@ public class Quiz extends AppCompatActivity {
         int checkedRadioButtonId = answersGroup.getCheckedRadioButtonId();
         if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
             correctAnswersCounts++;
+            upgradeCorrect();
             answerAlreadyChecked = true;
+        }
+        if (Integer.parseInt(correctAnswer) != checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
+            upgradeError();
         }
         if (highlight) {
             if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !answerAlreadyChecked) {

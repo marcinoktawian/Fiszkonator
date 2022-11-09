@@ -181,9 +181,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.e("tle99", e.getMessage());
             Log.e("hello",DB_PATH);
         }
-
         db.close();
-
         return listYears;
     }
 
