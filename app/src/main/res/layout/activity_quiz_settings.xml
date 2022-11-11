@@ -178,13 +178,13 @@
                     android:textSize="20sp"
                     android:gravity="center"
                     android:textStyle="bold"
-                    android:text="Licz błędy"/>
+                    android:text="Tylko nienauczone pytania"/>
 
                 <Switch
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:id="@+id/count_errors_switch"
+                    android:id="@+id/not_learn_questions"
                     android:layout_marginRight="50dp"
                     tools:ignore="UseSwitchCompatOrMaterialXml" />
 

@@ -3,7 +3,6 @@ package com.example.medquiz;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,6 +18,7 @@ public class CategoryList extends AppCompatActivity {
 
     DatabaseHelper dbHeplper;
 
+//    on create function with init db
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

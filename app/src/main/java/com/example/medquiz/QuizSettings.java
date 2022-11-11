@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Checkable;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -69,6 +70,22 @@ public class QuizSettings extends AppCompatActivity {
             }
 
         });
+        Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
+        Switch trainErrorsSwitch = (Switch) findViewById(R.id.train_errors_switch);
+        randomSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    trainErrorsSwitch.setChecked(false);
+                }
+            }
+        });
+        trainErrorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    randomSwitch.setChecked(false);
+                }
+            }
+        });
         startQuizClick();
     }
 
@@ -103,6 +120,7 @@ public class QuizSettings extends AppCompatActivity {
         Spinner yearSpinner = (Spinner) findViewById(R.id.spinner_year);
         Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
         Switch trainingSwitch = (Switch) findViewById(R.id.training_switch);
+        Switch trainErrorsSwitch = (Switch) findViewById(R.id.train_errors_switch);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
@@ -111,6 +129,7 @@ public class QuizSettings extends AppCompatActivity {
                 intent.putExtra("name", categoryName);
                 intent.putExtra("random", randomSwitch.isChecked());
                 intent.putExtra("training", trainingSwitch.isChecked());
+                intent.putExtra("trainErrors", trainErrorsSwitch.isChecked());
                 startActivity(intent);
             }
         });

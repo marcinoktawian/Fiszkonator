@@ -28,6 +28,7 @@ public class Quiz extends AppCompatActivity {
     String categoryName;
     Boolean random;
     Boolean training;
+    Boolean trainErrors;
     Integer index = 0;
     Integer correctAnswersCounts = 0;
     Cursor questions;
@@ -67,6 +68,7 @@ public class Quiz extends AppCompatActivity {
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
             training = (Boolean) savedInstanceState.getSerializable("training");
+            trainErrors = (Boolean) savedInstanceState.getSerializable("trainErrors");
         }
 
         questions = this.getQuestions(categoryName, indexStr, year);
@@ -146,13 +148,18 @@ public class Quiz extends AppCompatActivity {
                     c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
                 }
 
-            } else {
+            } else if (trainErrors) {
                 if (year.equals("ALL")){
                     c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
                 } else {
                     c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " LIMIT " + limit, null);
                 }
-
+            }else{
+                if (year.equals("ALL")){
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                } else {
+                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " LIMIT " + limit, null);
+                }
             }
             if (c == null) return null;
         } catch (Exception e) {

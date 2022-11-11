@@ -167,8 +167,8 @@ def get_last_row_num(conn, table):
 
 
 def main():
-    pdfName = "Zakazy/2020/Zakazy2020.pdf"
-    year = 2020
+    pdfName = "Zakazy/2019/Zakazy2019.pdf"
+    year = 2019
     database = "MedBaza.db"
     subjectId = 1
 
@@ -177,6 +177,7 @@ def main():
     c = create_connection(database)
     with c:
         IndexPytanie = get_last_row_num(c, "Pytanie")
+        # IndexPytanie = 0
         # subject = (subjectId, subjectName)
         # create_subject(c, subject)
         for question in questions:

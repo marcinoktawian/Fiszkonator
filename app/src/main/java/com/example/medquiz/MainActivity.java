@@ -9,9 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -19,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final Button button = findViewById(R.id.start_button);
+//        send to new layout
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent activity2Intent = new Intent(getApplicationContext(), CategoryList.class);
