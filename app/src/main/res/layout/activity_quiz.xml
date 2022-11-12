@@ -16,8 +16,41 @@
             android:id="@+id/question_number"
             android:text="1/30"
             android:textSize="16sp"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentLeft="true"
+            android:textStyle="bold"
             android:layout_margin="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/wrong_stats_number"
+            android:text="1"
+            android:textSize="16sp"
+            android:layout_toLeftOf="@id/slash_stats_number"
+            android:textColor="@color/wrong_answer"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/slash_stats_number"
+            android:text="/"
+            android:textSize="16sp"
+            android:layout_toLeftOf="@id/correct_stats_number"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/correct_stats_number"
+            android:text="30"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_alignParentRight="true"
+            android:textColor="@color/correct_answer"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="20dp" />
 
         <RelativeLayout android:id="@+id/circles"
             android:layout_marginTop="-100dp"
