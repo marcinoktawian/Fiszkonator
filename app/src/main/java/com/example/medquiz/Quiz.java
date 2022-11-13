@@ -114,6 +114,7 @@ public class Quiz extends AppCompatActivity {
 
         RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
         answersGroup.removeAllViews();
+        answersGroup.clearCheck();
         String answer;
 
         for (int item = 1; item <= 5; item++) {
