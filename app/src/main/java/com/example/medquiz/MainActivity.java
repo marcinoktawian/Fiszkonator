@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,18 +27,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    boolean backPressedOnce = false;
-
+    boolean isPressed=false;
     public void onBackPressed() {
-        if (backPressedOnce){
-            super.onBackPressed();
+        if (isPressed){
+            finishAffinity();
+            System.exit(0);
         }else {
-            backPressedOnce = true;
-            Toast.makeText(getApplicationContext(), "press again to exit", Toast.LENGTH_SHORT).show();
+            isPressed = true;
+            Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    backPressedOnce = false;
+                    isPressed = false;
                 }
             }, 2000);
         }

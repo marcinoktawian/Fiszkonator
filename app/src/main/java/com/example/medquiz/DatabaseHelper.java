@@ -128,7 +128,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             c.close();
         } catch (Exception e) {
             Log.e("tle99", e.getMessage());
-            Log.e("hello",DB_PATH);
         }
 
         db.close();
@@ -155,7 +154,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             c.close();
         } catch (Exception e) {
             Log.e("tle99", e.getMessage());
-            Log.e("hello",DB_PATH);
         }
         db.close();
         return Integer.parseInt(countStr);
@@ -168,8 +166,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         listYears.add("ALL");
         try {
             c = db.rawQuery("SELECT DISTINCT rok FROM Pytanie WHERE IdPrzedmiotu = " + idPrzedmiotu, null);
-            if(c == null) return null;
-
+            if(c == null) return listYears;
             String name;
             c.moveToFirst();
             do {
@@ -179,7 +176,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             c.close();
         } catch (Exception e) {
             Log.e("tle99", e.getMessage());
-            Log.e("hello",DB_PATH);
         }
         db.close();
         return listYears;

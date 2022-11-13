@@ -8,17 +8,19 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Quiz extends AppCompatActivity {
 
@@ -36,6 +38,8 @@ public class Quiz extends AppCompatActivity {
     SQLiteDatabase db;
     Boolean answerAlreadyChecked;
     String questionId;
+    List<String> finishedQuestions = new ArrayList<String>();
+
 
 
     @Override
@@ -51,10 +55,16 @@ public class Quiz extends AppCompatActivity {
         }
         db = dbHelper.getWritableDatabase();
 
+//        Get extra values from settings
         if (savedInstanceState == null) {
             extrasBundle = getIntent().getExtras();
             if (extrasBundle == null) {
                 indexStr = null;
+                year = null;
+                categoryName = null;
+                random = null;
+                training = null;
+                trainErrors = null;
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
                 year = extrasBundle.getString("year");
@@ -72,11 +82,13 @@ public class Quiz extends AppCompatActivity {
             trainErrors = (Boolean) savedInstanceState.getSerializable("trainErrors");
         }
 
+//        Get questions and show the first one
         questions = this.getQuestions(categoryName, indexStr, year);
         questions.moveToFirst();
         setQuestion();
         setQuestionNumber();
 
+//        If set training the button won't show
         final Button checkButton= findViewById(R.id.check_question);
         if (training){
             checkButton.setOnClickListener(new View.OnClickListener() {
@@ -90,13 +102,13 @@ public class Quiz extends AppCompatActivity {
                 layout.removeView(checkButton);
 
         }
-
     }
 
+//    Show question, answers and set stats
     public void setQuestion() {
         answerAlreadyChecked = false;
         questionId = questions.getString(0);
-        String trescPytania = questions.getString(2);
+        String trescPytania = questions.getString(1);
         TextView questionTextView = (TextView) findViewById(R.id.question);
         questionTextView.setText(trescPytania);
 
@@ -105,7 +117,7 @@ public class Quiz extends AppCompatActivity {
         String answer;
 
         for (int item = 1; item <= 5; item++) {
-            answer = questions.getString(item + 2);
+            answer = questions.getString(item + 1);
             if (answer != null) {
                 RadioButton answerRadioButton = new RadioButton(getApplicationContext());
                 answerRadioButton.setId(item);
@@ -115,8 +127,10 @@ public class Quiz extends AppCompatActivity {
                 answersGroup.addView(answerRadioButton);
             }
         }
+        setStats(questions.getString(8),questions.getString(9));
     }
 
+//    Set stats wrong/correct number of answers
     public void setStats(String wrong, String correct){
         TextView wrongTextView = (TextView) findViewById(R.id.wrong_stats_number);
         TextView correctTextView = (TextView) findViewById(R.id.correct_stats_number);
@@ -124,12 +138,18 @@ public class Quiz extends AppCompatActivity {
         correctTextView.setText(correct);
     }
 
+//    If this is last question go to result if not show next question
     public void nextQuestionButton(View view) {
         checkAnswer(false);
         if (index == Integer.parseInt(indexStr)) {
             db.close();
             Intent intent = new Intent(getApplicationContext(), Result.class);
             intent.putExtra("result", correctAnswersCounts + "/" + indexStr);
+            intent.putExtra("numbersOfQuestions", indexStr);
+            for (int item = 0; item < Integer.valueOf(indexStr); item++) {
+                intent.putExtra("IdQuestion" +item, finishedQuestions.get(item*2));
+                intent.putExtra("AnsQuestion" +item, finishedQuestions.get(item*2+1));
+            }
             startActivity(intent);
         } else {
             questions.moveToNext();
@@ -139,34 +159,36 @@ public class Quiz extends AppCompatActivity {
 
     }
 
+//    Set question index count
     public void setQuestionNumber() {
         index++;
         TextView countingTextView = (TextView) findViewById(R.id.question_number);
         countingTextView.setText(index + "/" + indexStr);
     }
 
+//    Get question numbers depend of settings
     public Cursor getQuestions(String idPrzedmiotu, String limit, String year) {
         Cursor c = null;
 
         try {
             if (random) {
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT * FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
                 }else{
-                    c = db.rawQuery("SELECT * FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
                 }
 
             } else if (trainErrors) {
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT *, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
                 } else {
-                    c = db.rawQuery("SELECT *, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
                 }
             }else{
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
                 } else {
-                    c = db.rawQuery("SELECT * FROM Pytanie JOIN Przedmiot ON Pytanie.IdPrzedmiotu=Przedmiot.IdPrzedmiotu where Przedmiot.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND Rok = " + year + " LIMIT " + limit, null);
+                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " LIMIT " + limit, null);
                 }
             }
             if (c == null) return null;
@@ -176,6 +198,7 @@ public class Quiz extends AppCompatActivity {
         return c;
     }
 
+//    Upgrade number of wrong answers in database
     public void upgradeError(){
         Cursor cursor =db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
         int cardnum=0;
@@ -190,6 +213,7 @@ public class Quiz extends AppCompatActivity {
         db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
     }
 
+    //    Upgrade number of correct answers in database
     public void upgradeCorrect(){
         Cursor cursor =db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
         int cardnum=0;
@@ -204,17 +228,33 @@ public class Quiz extends AppCompatActivity {
         db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
     }
 
+//    Chek if the answert is correct and if is it traing show correct answers
     public void checkAnswer(Boolean highlight) {
+        if(!finishedQuestions.contains(questionId)){
+            finishedQuestions.add(questionId);
+        }
         String correctAnswer;
-        correctAnswer = questions.getString(8);
+        correctAnswer = questions.getString(7);
         RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
         int checkedRadioButtonId = answersGroup.getCheckedRadioButtonId();
+        if(!answerAlreadyChecked && finishedQuestions.contains(questionId)){
+            if (answersGroup.getCheckedRadioButtonId() == -1)
+            {
+                finishedQuestions.add("");
+            }
+            else
+            {
+                finishedQuestions.add(String.valueOf(checkedRadioButtonId));
+            }
+        }
         if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
             correctAnswersCounts++;
-            upgradeCorrect();
+            if(!training){
+                upgradeCorrect();
+            }
             answerAlreadyChecked = true;
         }
-        if (Integer.parseInt(correctAnswer) != checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
+        if (Integer.parseInt(correctAnswer) != checkedRadioButtonId && !highlight && !answerAlreadyChecked && !training) {
             upgradeError();
         }
         if (highlight) {
@@ -234,4 +274,23 @@ public class Quiz extends AppCompatActivity {
             }
         }
     }
+
+// click two times back to exit
+    boolean isPressed=false;
+    public void onBackPressed() {
+        if (isPressed){
+            finishAffinity();
+            System.exit(0);
+        }else {
+            isPressed = true;
+            Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isPressed = false;
+                }
+            }, 2000);
+        }
+    }
+
 }

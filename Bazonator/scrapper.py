@@ -9,6 +9,7 @@ def get_questions_from_pdf(pdfPath):
     odpB = False
     odpC = False
     odpD = False
+    odpE = False
     questions = []
     question = {
         "Pytanie": "",
@@ -16,6 +17,7 @@ def get_questions_from_pdf(pdfPath):
         "odpB": "",
         "odpC": "",
         "odpD": "",
+        "odpE": None,
         "correct": "",
     }
     firstline = True
@@ -31,7 +33,7 @@ def get_questions_from_pdf(pdfPath):
             all_text.extend(clean_text.extract_text().splitlines())
             all_bold_textes.extend(all_bold_text.extract_text().splitlines())
         for line in all_text:
-            if ";" in line:
+            if "$" in line:
                 pytanie = True
                 questions.append(question)
                 question = {
@@ -40,6 +42,7 @@ def get_questions_from_pdf(pdfPath):
                     "odpB": "",
                     "odpC": "",
                     "odpD": "",
+                    "odpE": None,
                     "correct": "",
                 }
                 firstline = True
@@ -103,6 +106,7 @@ def get_questions_from_pdf(pdfPath):
                     odpE = True
                     odpD = False
                     firstline = True
+                    question["odpE"] = ""
                 else:
                     question["odpD"] += line
                     if (
@@ -111,6 +115,21 @@ def get_questions_from_pdf(pdfPath):
                         and firstline
                     ):
                         question["correct"] += "4"
+                    firstline = False
+                    continue
+            if odpE:
+                if line.lstrip()[0].lower() == "f":
+                    odpF = True
+                    odpE = False
+                    firstline = True
+                else:
+                    question["odpE"] += line
+                    if (
+                        line in all_bold_textes
+                        and question["correct"] == ""
+                        and firstline
+                    ):
+                        question["correct"] += "5"
                     firstline = False
                     continue
     return questions
@@ -141,8 +160,10 @@ def create_subject(conn, subject):
 
 
 def create_question(conn, question):
-    sql = """ INSERT INTO Pytanie(idPrzedmiotu,TrescPytania,OdpA,OdpB,OdpC,OdpD,PrawidlowaOdp,Rok)
-              VALUES(?,?,?,?,?,?,?,?) """
+    sql = """ INSERT INTO Pytanie(idPrzedmiotu,TrescPytania,OdpA,OdpB,OdpC,OdpD,OdpE,PrawidlowaOdp,Rok)
+              VALUES(?,?,?,?,?,?,?,?,?) """
+    # sql = """ INSERT INTO Pytanie(idPrzedmiotu,TrescPytania,OdpA,OdpB,OdpC,OdpD,OdpE,PrawidlowaOdp)
+    #           VALUES(?,?,?,?,?,?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, question)
     conn.commit()
@@ -167,21 +188,21 @@ def get_last_row_num(conn, table):
 
 
 def main():
-    pdfName = "Zakazy/2019/Zakazy2019.pdf"
-    year = 2019
+    pdfName = "Hematologia/BAZA-HEMATOLOGIA.pdf"
+    year = 2021
     database = "MedBaza.db"
-    subjectId = 1
+    subjectId = 2
 
-    subjectName = "Zakazy"
+    subjectName = "Hematologia"
     questions = get_questions_from_pdf(pdfName)
     c = create_connection(database)
     with c:
         IndexPytanie = get_last_row_num(c, "Pytanie")
         # IndexPytanie = 0
-        # subject = (subjectId, subjectName)
+        subject = (subjectId, subjectName)
         # create_subject(c, subject)
         for question in questions:
-            IndexPytanie = IndexPytanie + 1
+            IndexPytanie = int(IndexPytanie) + 1
             pytanie = (
                 subjectId,
                 question["Pytanie"],
@@ -189,6 +210,7 @@ def main():
                 question["odpB"],
                 question["odpC"],
                 question["odpD"],
+                question["odpE"],
                 question["correct"],
                 year,
             )
