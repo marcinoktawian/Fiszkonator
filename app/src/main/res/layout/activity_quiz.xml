@@ -20,6 +20,16 @@
             android:textStyle="bold"
             android:layout_margin="20dp" />
 
+        <Button
+            android:id="@+id/change_learn_button"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="5dp"
+            android:textSize="13dp"
+            android:text="Pytanie nauczone" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

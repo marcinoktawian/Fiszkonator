@@ -31,6 +31,7 @@ public class Quiz extends AppCompatActivity {
     Boolean random;
     Boolean training;
     Boolean trainErrors;
+    Boolean learnSwitch;
     Integer index = 0;
     Integer correctAnswersCounts = 0;
     Cursor questions;
@@ -38,6 +39,7 @@ public class Quiz extends AppCompatActivity {
     SQLiteDatabase db;
     Boolean answerAlreadyChecked;
     String questionId;
+    String ifLearn;
     List<String> finishedQuestions = new ArrayList<String>();
 
 
@@ -65,6 +67,7 @@ public class Quiz extends AppCompatActivity {
                 random = null;
                 training = null;
                 trainErrors = null;
+                learnSwitch = null;
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
                 year = extrasBundle.getString("year");
@@ -72,6 +75,7 @@ public class Quiz extends AppCompatActivity {
                 random = extrasBundle.getBoolean("random");
                 training = extrasBundle.getBoolean("training");
                 trainErrors = extrasBundle.getBoolean("trainErrors");
+                learnSwitch = extrasBundle.getBoolean("learnSwitch");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
@@ -80,6 +84,7 @@ public class Quiz extends AppCompatActivity {
             random = (Boolean) savedInstanceState.getSerializable("random");
             training = (Boolean) savedInstanceState.getSerializable("training");
             trainErrors = (Boolean) savedInstanceState.getSerializable("trainErrors");
+            learnSwitch = (Boolean) savedInstanceState.getSerializable("learnSwitch");
         }
 
 //        Get questions and show the first one
@@ -87,6 +92,9 @@ public class Quiz extends AppCompatActivity {
         questions.moveToFirst();
         setQuestion();
         setQuestionNumber();
+
+        final Button learnButton = findViewById(R.id.change_learn_button);
+        learnButton.setVisibility(View.GONE);
 
 //        If set training the button won't show
         final Button checkButton= findViewById(R.id.check_question);
@@ -100,8 +108,8 @@ public class Quiz extends AppCompatActivity {
             ViewGroup layout = (ViewGroup) checkButton.getParent();
             if(null!=layout) //for safety only  as you are doing onClick
                 layout.removeView(checkButton);
-
         }
+
     }
 
 //    Show question, answers and set stats
@@ -111,6 +119,9 @@ public class Quiz extends AppCompatActivity {
         String trescPytania = questions.getString(1);
         TextView questionTextView = (TextView) findViewById(R.id.question);
         questionTextView.setText(trescPytania);
+
+        final Button learnButton = findViewById(R.id.change_learn_button);
+        learnButton.setVisibility(View.GONE);
 
         RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
         answersGroup.removeAllViews();
@@ -129,6 +140,7 @@ public class Quiz extends AppCompatActivity {
             }
         }
         setStats(questions.getString(8),questions.getString(9));
+        ifLearn = questions.getString(10);
     }
 
 //    Set stats wrong/correct number of answers
@@ -157,7 +169,6 @@ public class Quiz extends AppCompatActivity {
             setQuestionNumber();
             setQuestion();
         }
-
     }
 
 //    Set question index count
@@ -174,22 +185,47 @@ public class Quiz extends AppCompatActivity {
         try {
             if (random) {
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                    if(learnSwitch){
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
+                    }else{
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                    }
                 }else{
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
+                    if(learnSwitch) {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
+                    } else{
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
+                    }
                 }
 
             } else if (trainErrors) {
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    if(learnSwitch) {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    } else {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    }
                 } else {
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
+                    if(learnSwitch) {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
+                    }else {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    }
                 }
             }else{
                 if (year.equals("ALL")){
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                    if(learnSwitch) {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 LIMIT " + limit, null);
+                    }else{
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                    }
                 } else {
-                    c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " LIMIT " + limit, null);
+                    if(learnSwitch) {
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " AND s.CzyNauczone=0 LIMIT " + limit, null);
+                    }else{
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " LIMIT " + limit, null);
+                    }
+
                 }
             }
             if (c == null) return null;
@@ -229,7 +265,22 @@ public class Quiz extends AppCompatActivity {
         db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
     }
 
-//    Chek if the answert is correct and if is it traing show correct answers
+//    Set question as learn
+    public void setLearn(){
+        ContentValues values = new ContentValues();
+        values.put("CzyNauczone",1);
+        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+    }
+
+//    Set question as unlearn
+    public void unsetLearn(){
+        ContentValues values = new ContentValues();
+        values.put("CzyNauczone",0);
+        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+    }
+
+
+//    Chek if the answear is correct and if is it traing show correct answers
     public void checkAnswer(Boolean highlight) {
         if(!finishedQuestions.contains(questionId)){
             finishedQuestions.add(questionId);
@@ -273,6 +324,27 @@ public class Quiz extends AppCompatActivity {
                     }
                 }
             }
+            final Button learnButton = findViewById(R.id.change_learn_button);
+            learnButton.setVisibility(View.VISIBLE);
+            if (ifLearn.equals("0")){
+                learnButton.setText("Zaznacz jako nauczone");
+            }else{
+                learnButton.setText("Odznacz jako nauczone");
+            }
+            learnButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    if (ifLearn.equals("0")){
+                        setLearn();
+                        learnButton.setText("Odznacz jako nauczone");
+                        ifLearn="1";
+
+                    }else{
+                        unsetLearn();
+                        learnButton.setText("Zaznacz jako nauczone");
+                        ifLearn="0";
+                    }
+                }
+            });
         }
     }
 

@@ -123,6 +123,7 @@ public class QuizSettings extends AppCompatActivity {
         Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
         Switch trainingSwitch = (Switch) findViewById(R.id.training_switch);
         Switch trainErrorsSwitch = (Switch) findViewById(R.id.train_errors_switch);
+        Switch learnSwitch = (Switch) findViewById(R.id.not_learn_questions);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
@@ -132,6 +133,7 @@ public class QuizSettings extends AppCompatActivity {
                 intent.putExtra("random", randomSwitch.isChecked());
                 intent.putExtra("training", trainingSwitch.isChecked());
                 intent.putExtra("trainErrors", trainErrorsSwitch.isChecked());
+                intent.putExtra("learnSwitch", learnSwitch.isChecked());
                 startActivity(intent);
             }
         });
