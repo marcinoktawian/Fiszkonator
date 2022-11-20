@@ -4,14 +4,17 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Checkable;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -69,6 +72,22 @@ public class QuizSettings extends AppCompatActivity {
             }
 
         });
+        Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
+        Switch trainErrorsSwitch = (Switch) findViewById(R.id.train_errors_switch);
+        randomSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    trainErrorsSwitch.setChecked(false);
+                }
+            }
+        });
+        trainErrorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    randomSwitch.setChecked(false);
+                }
+            }
+        });
         startQuizClick();
     }
 
@@ -103,6 +122,8 @@ public class QuizSettings extends AppCompatActivity {
         Spinner yearSpinner = (Spinner) findViewById(R.id.spinner_year);
         Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
         Switch trainingSwitch = (Switch) findViewById(R.id.training_switch);
+        Switch trainErrorsSwitch = (Switch) findViewById(R.id.train_errors_switch);
+        Switch learnSwitch = (Switch) findViewById(R.id.not_learn_questions);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
@@ -111,8 +132,11 @@ public class QuizSettings extends AppCompatActivity {
                 intent.putExtra("name", categoryName);
                 intent.putExtra("random", randomSwitch.isChecked());
                 intent.putExtra("training", trainingSwitch.isChecked());
+                intent.putExtra("trainErrors", trainErrorsSwitch.isChecked());
+                intent.putExtra("learnSwitch", learnSwitch.isChecked());
                 startActivity(intent);
             }
         });
     }
+
 }

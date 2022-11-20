@@ -3,7 +3,6 @@ package com.example.medquiz;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,6 +18,7 @@ public class CategoryList extends AppCompatActivity {
 
     DatabaseHelper dbHeplper;
 
+//    on create function with init db
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +32,7 @@ public class CategoryList extends AppCompatActivity {
         createCategoryList();
     }
 
+//    Get list of all subject from database and create button for them
     public void createCategoryList(){
         List<String> listCategories = dbHeplper.getAllSubjects();
         Integer id = 1;
@@ -41,6 +42,7 @@ public class CategoryList extends AppCompatActivity {
         }
     }
 
+//    Create button for subject
     public void createButon(String categoryName, final int newId) {
         LinearLayout buttonListLayout = (LinearLayout) findViewById(R.id.categories_buttons_layout);
         final Button CategoryButton = new Button(this);
@@ -66,17 +68,19 @@ public class CategoryList extends AppCompatActivity {
         buttonListLayout.addView(CategoryButton);
     }
 
-    boolean backPressedOnce = false;
+//    Click two times back to exit
+    boolean isPressed=false;
     public void onBackPressed() {
-        if (backPressedOnce){
-            super.onBackPressed();
+        if (isPressed){
+            finishAffinity();
+            System.exit(0);
         }else {
-            backPressedOnce = true;
-            Toast.makeText(getApplicationContext(), "press again to exit", Toast.LENGTH_SHORT).show();
+            isPressed = true;
+            Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    backPressedOnce = false;
+                    isPressed = false;
                 }
             }, 2000);
         }
