@@ -1,4 +1,4 @@
-package com.example.medquiz;
+package com.example.fiszkonator;
 
 import org.junit.Test;
 

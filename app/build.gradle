@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.medquiz'
+    namespace 'com.example.fiszkonator'
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.example.medquiz"
+        applicationId "com.example.fiszkonator"
         minSdk 29
         targetSdk 32
         versionCode 1
