@@ -26,12 +26,13 @@ public class Quiz extends AppCompatActivity {
 
     Bundle extrasBundle;
     String indexStr;
-    String year;
+    String level;
     String categoryName;
     Boolean random;
     Boolean training;
     Boolean trainErrors;
     Boolean learnSwitch;
+    String option;
     Integer index = 0;
     Integer correctAnswersCounts = 0;
     Cursor questions;
@@ -62,33 +63,35 @@ public class Quiz extends AppCompatActivity {
             extrasBundle = getIntent().getExtras();
             if (extrasBundle == null) {
                 indexStr = null;
-                year = null;
+                level = null;
                 categoryName = null;
                 random = null;
                 training = null;
                 trainErrors = null;
                 learnSwitch = null;
+                option = null;
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
-                year = extrasBundle.getString("year");
+                level = extrasBundle.getString("level");
                 categoryName = extrasBundle.getString("name");
                 random = extrasBundle.getBoolean("random");
                 training = extrasBundle.getBoolean("training");
-                trainErrors = extrasBundle.getBoolean("trainErrors");
                 learnSwitch = extrasBundle.getBoolean("learnSwitch");
+                option = extrasBundle.getString("option");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
-            year = (String) savedInstanceState.getSerializable("year");
+            level = (String) savedInstanceState.getSerializable("level");
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
             training = (Boolean) savedInstanceState.getSerializable("training");
             trainErrors = (Boolean) savedInstanceState.getSerializable("trainErrors");
             learnSwitch = (Boolean) savedInstanceState.getSerializable("learnSwitch");
+            option = (String) savedInstanceState.getSerializable("option");
         }
 
 //        Get questions and show the first one
-        questions = this.getQuestions(categoryName, indexStr, year);
+        questions = this.getQuestions(categoryName, indexStr, level);
         questions.moveToFirst();
         setQuestion();
         setQuestionNumber();
@@ -179,51 +182,53 @@ public class Quiz extends AppCompatActivity {
     }
 
 //    Get question numbers depend of settings
-    public Cursor getQuestions(String idPrzedmiotu, String limit, String year) {
+    public Cursor getQuestions(String nazwaOpcji, String limit, String level) {
         Cursor c = null;
+        String optionQuery = "";
+        if (option.equals("Kategoria")){
+            optionQuery = "JOIN Kategoria k ON k.IdKategorii=f.IdKategorii where k.NazwaKategorii = \"" + nazwaOpcji;
+        }else{
+            optionQuery = "JOIN Zestaw z ON z.idZestawu=f.idZestawu where z.NazwaZestawu = \"" + nazwaOpcji;
+        }
 
         try {
             if (random) {
-                if (year.equals("ALL")){
-                    if(learnSwitch){
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
-                    }else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY RANDOM() LIMIT " + limit, null);
-                    }
+                if (level.equals("ALL")){
+                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=p.IdFiszki" + optionQuery + "\" AND s.PoziomNauczenia=0 ORDER BY RANDOM() LIMIT " + limit, null);
                 }else{
                     if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
                     } else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " ORDER BY RANDOM() LIMIT " + limit, null);
                     }
                 }
 
             } else if (trainErrors) {
-                if (year.equals("ALL")){
+                if (level.equals("ALL")){
                     if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
                     } else {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
                     }
                 } else {
                     if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = \"" + level + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
                     }else {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = \"" + year + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = \"" + level + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
                     }
                 }
             }else{
-                if (year.equals("ALL")){
+                if (level.equals("ALL")){
                     if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND s.CzyNauczone=0 LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND s.CzyNauczone=0 LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" LIMIT " + limit, null);
                     }
                 } else {
                     if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " AND s.CzyNauczone=0 LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " AND s.CzyNauczone=0 LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + idPrzedmiotu + "\" AND p.Rok = " + year + " LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " LIMIT " + limit, null);
                     }
 
                 }

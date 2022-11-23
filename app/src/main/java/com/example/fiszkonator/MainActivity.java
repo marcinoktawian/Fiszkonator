@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 //        send to new layout
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent activity2Intent = new Intent(getApplicationContext(), CategoryList.class);
+                Intent activity2Intent = new Intent(getApplicationContext(), InitChoose.class);
                 startActivity(activity2Intent);
             }
         });

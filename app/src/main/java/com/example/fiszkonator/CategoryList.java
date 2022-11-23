@@ -17,6 +17,8 @@ import java.util.List;
 public class CategoryList extends AppCompatActivity {
 
     DatabaseHelper dbHeplper;
+    Bundle extrasBundle;
+    String option;
 
 //    on create function with init db
     @Override
@@ -29,12 +31,23 @@ public class CategoryList extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //        Get extra values from Bundle
+        if(savedInstanceState==null){
+            extrasBundle =getIntent().getExtras();
+            if(extrasBundle ==null){
+                option =null;
+            }else{
+                option = extrasBundle.getString("option");
+            }
+        }else{
+            option = (String) savedInstanceState.getSerializable("option");
+        }
         createCategoryList();
     }
 
 //    Get list of all subject from database and create button for them
     public void createCategoryList(){
-        List<String> listCategories = dbHeplper.getAllSubjects();
+        List<String> listCategories = dbHeplper.getAllNames(option);
         Integer id = 1;
         for (String subject : listCategories){
             createButon(subject,id);
@@ -62,27 +75,11 @@ public class CategoryList extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), QuizSettings.class);
                 intent.putExtra("id", "" + newId);
                 intent.putExtra("name", "" + categoryName);
+                intent.putExtra("option", option);
                 startActivity(intent);
             }
         });
         buttonListLayout.addView(CategoryButton);
     }
 
-//    Click two times back to exit
-    boolean isPressed=false;
-    public void onBackPressed() {
-        if (isPressed){
-            finishAffinity();
-            System.exit(0);
-        }else {
-            isPressed = true;
-            Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    isPressed = false;
-                }
-            }, 2000);
-        }
-    }
 }
