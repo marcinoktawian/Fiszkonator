@@ -14,4 +14,9 @@
     <color name="rectangle_color">#FF71D3FF</color>
     <color name="correct_answer">#4CAF50</color>
     <color name="wrong_answer">#F44336</color>
+    <color name="level_one">#FF0000</color>
+    <color name="level_two">#FF6600</color>
+    <color name="level_three">#FFA500</color>
+    <color name="level_four">#FFC107</color>
+    <color name="level_five">#5CDC61</color>
 </resources>

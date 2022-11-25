@@ -18,6 +18,8 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +28,11 @@ public class Quiz extends AppCompatActivity {
 
     Bundle extrasBundle;
     String indexStr;
-    String level;
+    String difficultyLevel;
+    String learnLevel;
     String categoryName;
     Boolean random;
-    Boolean training;
-    Boolean trainErrors;
-    Boolean learnSwitch;
+    Boolean ifPolishFirst;
     String option;
     Integer index = 0;
     Integer correctAnswersCounts = 0;
@@ -40,8 +41,14 @@ public class Quiz extends AppCompatActivity {
     SQLiteDatabase db;
     Boolean answerAlreadyChecked;
     String questionId;
-    String ifLearn;
-    List<String> finishedQuestions = new ArrayList<String>();
+    String polishWord;
+    String foreignWord;
+    String polishUsage;
+    String foreignUsage;
+    String comment;
+    Integer questionLevel;
+    Boolean showPolishNow;
+    Boolean addedToResult;
 
 
 
@@ -63,87 +70,83 @@ public class Quiz extends AppCompatActivity {
             extrasBundle = getIntent().getExtras();
             if (extrasBundle == null) {
                 indexStr = null;
-                level = null;
+                difficultyLevel = null;
+                learnLevel= null;
                 categoryName = null;
                 random = null;
-                training = null;
-                trainErrors = null;
-                learnSwitch = null;
                 option = null;
+                ifPolishFirst = null;
             } else {
                 indexStr = extrasBundle.getString("numbersOfQuestions");
-                level = extrasBundle.getString("level");
+                difficultyLevel = extrasBundle.getString("level");
+                learnLevel = extrasBundle.getString("learnLevel");
                 categoryName = extrasBundle.getString("name");
                 random = extrasBundle.getBoolean("random");
-                training = extrasBundle.getBoolean("training");
-                learnSwitch = extrasBundle.getBoolean("learnSwitch");
                 option = extrasBundle.getString("option");
+                ifPolishFirst= extrasBundle.getBoolean("ifPolishFirst");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
-            level = (String) savedInstanceState.getSerializable("level");
+            difficultyLevel = (String) savedInstanceState.getSerializable("level");
+            learnLevel = (String) savedInstanceState.getSerializable("learnLevel");
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
-            training = (Boolean) savedInstanceState.getSerializable("training");
-            trainErrors = (Boolean) savedInstanceState.getSerializable("trainErrors");
-            learnSwitch = (Boolean) savedInstanceState.getSerializable("learnSwitch");
             option = (String) savedInstanceState.getSerializable("option");
+            ifPolishFirst= (Boolean) savedInstanceState.getSerializable("ifPolishFirst");
         }
 
 //        Get questions and show the first one
-        questions = this.getQuestions(categoryName, indexStr, level);
+        questions = this.getQuestions(categoryName, indexStr);
         questions.moveToFirst();
+
+        answerAlreadyChecked=false;
         setQuestion();
         setQuestionNumber();
 
         final Button learnButton = findViewById(R.id.change_learn_button);
         learnButton.setVisibility(View.GONE);
+        learnButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                learnQuestion();
+            }
+        });
 
 //        If set training the button won't show
         final Button checkButton= findViewById(R.id.check_question);
-        if (training){
-            checkButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    checkAnswer(true);
-                }
-            });
-        }else{
-            ViewGroup layout = (ViewGroup) checkButton.getParent();
-            if(null!=layout) //for safety only  as you are doing onClick
-                layout.removeView(checkButton);
-        }
+        checkButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                    checkAnswer();
+            }
+        });
+        final Button nextButton= findViewById(R.id.next_question);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                nextQuestionButton();
+            }
+        });
+
 
     }
 
 //    Show question, answers and set stats
     public void setQuestion() {
-        answerAlreadyChecked = false;
-        questionId = questions.getString(0);
-        String trescPytania = questions.getString(1);
-        TextView questionTextView = (TextView) findViewById(R.id.question);
-        questionTextView.setText(trescPytania);
-
+        questionId =questions.getString(0);
+        polishWord =questions.getString(1);
+        foreignWord =questions.getString(4);
+        polishUsage =questions.getString(3);
+        foreignUsage=questions.getString(5);
+        comment = questions.getString(2);
+        questionLevel = questions.getInt(8);
+        setStats(questions.getString(6),questions.getString(7));
         final Button learnButton = findViewById(R.id.change_learn_button);
         learnButton.setVisibility(View.GONE);
-
-        RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
-        answersGroup.removeAllViews();
-        answersGroup.clearCheck();
-        String answer;
-
-        for (int item = 1; item <= 5; item++) {
-            answer = questions.getString(item + 1);
-            if (answer != null) {
-                RadioButton answerRadioButton = new RadioButton(getApplicationContext());
-                answerRadioButton.setId(item);
-                answerRadioButton.setText(answer);
-                answerRadioButton.setTextSize(20);
-                answerRadioButton.setPadding(20, 10, 20, 10);
-                answersGroup.addView(answerRadioButton);
-            }
+        if(ifPolishFirst){
+            showPolishNow = true;
+        }else {
+            showPolishNow = false;
         }
-        setStats(questions.getString(8),questions.getString(9));
-        ifLearn = questions.getString(10);
+        addedToResult=false;
+        turnCard();
     }
 
 //    Set stats wrong/correct number of answers
@@ -154,20 +157,31 @@ public class Quiz extends AppCompatActivity {
         correctTextView.setText(correct);
     }
 
+    public void turnCard(){
+        TextView wordTextView = (TextView) findViewById(R.id.question);
+        TextView commentTextView = (TextView) findViewById(R.id.comment);
+        TextView usageTextView = (TextView) findViewById(R.id.word_usage);
+        if(showPolishNow){
+             wordTextView.setText(polishWord);
+             commentTextView.setText(comment);
+            commentTextView.setVisibility(View.VISIBLE);
+             usageTextView.setText(polishUsage);
+        }else{
+            wordTextView.setText(foreignWord);
+            commentTextView.setVisibility(View.GONE);
+            usageTextView.setText(foreignUsage);
+        }
+    }
+
 //    If this is last question go to result if not show next question
-    public void nextQuestionButton(View view) {
-        checkAnswer(false);
+    public void nextQuestionButton() {
         if (index == Integer.parseInt(indexStr)) {
             db.close();
             Intent intent = new Intent(getApplicationContext(), Result.class);
             intent.putExtra("result", correctAnswersCounts + "/" + indexStr);
-            intent.putExtra("numbersOfQuestions", indexStr);
-            for (int item = 0; item < Integer.valueOf(indexStr); item++) {
-                intent.putExtra("IdQuestion" +item, finishedQuestions.get(item*2));
-                intent.putExtra("AnsQuestion" +item, finishedQuestions.get(item*2+1));
-            }
             startActivity(intent);
         } else {
+            answerAlreadyChecked=false;
             questions.moveToNext();
             setQuestionNumber();
             setQuestion();
@@ -182,7 +196,7 @@ public class Quiz extends AppCompatActivity {
     }
 
 //    Get question numbers depend of settings
-    public Cursor getQuestions(String nazwaOpcji, String limit, String level) {
+    public Cursor getQuestions(String nazwaOpcji, String limit) {
         Cursor c = null;
         String optionQuery = "";
         if (option.equals("Kategoria")){
@@ -193,44 +207,32 @@ public class Quiz extends AppCompatActivity {
 
         try {
             if (random) {
-                if (level.equals("ALL")){
-                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=p.IdFiszki" + optionQuery + "\" AND s.PoziomNauczenia=0 ORDER BY RANDOM() LIMIT " + limit, null);
+                if(difficultyLevel.equals("ALL")){
+                    if(learnLevel.equals("ALL")){
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                    }else{
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
+                    }
                 }else{
-                    if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " AND s.CzyNauczone=0 ORDER BY RANDOM() LIMIT " + limit, null);
-                    } else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " ORDER BY RANDOM() LIMIT " + limit, null);
-                    }
-                }
-
-            } else if (trainErrors) {
-                if (level.equals("ALL")){
-                    if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
-                    } else {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
-                    }
-                } else {
-                    if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = \"" + level + "\" AND s.CzyNauczone=0 ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit , null);
-                    }else {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone, s.IloscBlednychOdp/(s.IloscBlednychOdp + s.IloscPrawidlowychOdp) AS stats FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON przed.IdPrzedmiotu=p.IdPRzedmiotu WHERE przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = \"" + level + "\" ORDER BY stats DESC, s.IloscBlednychOdp DESC LIMIT " + limit, null);
+                    if(learnLevel.equals("ALL")){
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                    }else{
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
                     }
                 }
             }else{
-                if (level.equals("ALL")){
-                    if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND s.CzyNauczone=0 LIMIT " + limit, null);
+                if(difficultyLevel.equals("ALL")){
+                    if(learnLevel.equals("ALL")){
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
                     }
-                } else {
-                    if(learnSwitch) {
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " AND s.CzyNauczone=0 LIMIT " + limit, null);
+                }else{
+                    if(learnLevel.equals("ALL")){
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT p.IdPytania, p.TrescPytania, p.OdpA, p.OdpB, p.OdpC, p.OdpD, p.OdpE, p.PrawidlowaOdp, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.CzyNauczone FROM Pytanie p JOIN Statystyki s ON s.IdPytania=p.IdPytania JOIN Przedmiot przed ON p.IdPrzedmiotu=przed.IdPrzedmiotu where przed.NazwaPrzedmiotu= \"" + nazwaOpcji + "\" AND p.Rok = " + level + " LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
                     }
-
                 }
             }
             if (c == null) return null;
@@ -240,9 +242,57 @@ public class Quiz extends AppCompatActivity {
         return c;
     }
 
-//    Upgrade number of wrong answers in database
+    public void learnQuestion(){
+        ContentValues values = new ContentValues();
+        Button learnButton = (Button) findViewById(R.id.change_learn_button);
+        if(!answerAlreadyChecked){
+            if(questionLevel==5){
+                Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
+                return;
+            }else{
+                questionLevel++;
+            }
+            if(!addedToResult){
+                correctAnswersCounts++;
+                addedToResult=true;
+                upgradeCorrect();
+            }
+            learnButton.setText("Pytanie nienauczone");
+        }else{
+            if(questionLevel==1){
+                Toast.makeText(getApplicationContext(), "Min level achived", Toast.LENGTH_SHORT).show();
+            }else{
+                questionLevel--;
+            }
+            if(!addedToResult){
+                addedToResult=true;
+                upgradeError();
+            }
+            learnButton.setText("Pytanie nauczone");
+        }
+        answerAlreadyChecked=!answerAlreadyChecked;
+        values.put("PoziomNauczenia",questionLevel);
+        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
+    }
+
+
+//    Chek if the answear is correct and if is it traing show correct answers
+    public void checkAnswer() {
+        showPolishNow=!showPolishNow;
+        final Button learnButton = findViewById(R.id.change_learn_button);
+        learnButton.setVisibility(View.VISIBLE);
+        if(questionLevel == 5 ){
+            answerAlreadyChecked=true;
+            learnButton.setText("Pytanie nienauczone");
+        }else{
+            learnButton.setText("Pytanie nauczone");
+        }
+        turnCard();
+    }
+
+    //    Upgrade number of wrong answers in database
     public void upgradeError(){
-        Cursor cursor =db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
+        Cursor cursor =db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
         int cardnum=0;
         cursor.moveToFirst();
         if( cursor != null )
@@ -252,12 +302,12 @@ public class Quiz extends AppCompatActivity {
         }
         ContentValues values = new ContentValues();
         values.put("IloscBlednychOdp",cardnum);
-        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
     //    Upgrade number of correct answers in database
     public void upgradeCorrect(){
-        Cursor cursor =db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdPytania = " + questionId, null);
+        Cursor cursor =db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
         int cardnum=0;
         cursor.moveToFirst();
         if( cursor != null )
@@ -267,91 +317,9 @@ public class Quiz extends AppCompatActivity {
         }
         ContentValues values = new ContentValues();
         values.put("IloscPrawidlowychOdp",cardnum);
-        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
+        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
-//    Set question as learn
-    public void setLearn(){
-        ContentValues values = new ContentValues();
-        values.put("CzyNauczone",1);
-        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
-    }
-
-//    Set question as unlearn
-    public void unsetLearn(){
-        ContentValues values = new ContentValues();
-        values.put("CzyNauczone",0);
-        db.update("Statystyki", values, "IdPytania = ?", new String[]{questionId});
-    }
-
-
-//    Chek if the answear is correct and if is it traing show correct answers
-    public void checkAnswer(Boolean highlight) {
-        if(!finishedQuestions.contains(questionId)){
-            finishedQuestions.add(questionId);
-        }
-        String correctAnswer;
-        correctAnswer = questions.getString(7);
-        RadioGroup answersGroup = (RadioGroup) findViewById(R.id.answers);
-        int checkedRadioButtonId = answersGroup.getCheckedRadioButtonId();
-        if(!answerAlreadyChecked && finishedQuestions.contains(questionId)){
-            if (answersGroup.getCheckedRadioButtonId() == -1)
-            {
-                finishedQuestions.add("");
-            }
-            else
-            {
-                finishedQuestions.add(String.valueOf(checkedRadioButtonId));
-            }
-        }
-        if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !highlight && !answerAlreadyChecked) {
-            correctAnswersCounts++;
-            if(!training){
-                upgradeCorrect();
-            }
-            answerAlreadyChecked = true;
-        }
-        if (Integer.parseInt(correctAnswer) != checkedRadioButtonId && !highlight && !answerAlreadyChecked && !training) {
-            upgradeError();
-        }
-        if (highlight) {
-            if (Integer.parseInt(correctAnswer) == checkedRadioButtonId && !answerAlreadyChecked) {
-                correctAnswersCounts++;
-            }
-            answerAlreadyChecked = true;
-            for (int item = 1; item <= 5; item++) {
-                RadioButton answerRadioButton = (RadioButton) findViewById(item);
-                if (answerRadioButton != null) {
-                    if(item == Integer.parseInt(correctAnswer)) {
-                         answerRadioButton.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.correct_answer));
-                    }else{
-                        answerRadioButton.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.wrong_answer));
-                    }
-                }
-            }
-            final Button learnButton = findViewById(R.id.change_learn_button);
-            learnButton.setVisibility(View.VISIBLE);
-            if (ifLearn.equals("0")){
-                learnButton.setText("Zaznacz jako nauczone");
-            }else{
-                learnButton.setText("Odznacz jako nauczone");
-            }
-            learnButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    if (ifLearn.equals("0")){
-                        setLearn();
-                        learnButton.setText("Odznacz jako nauczone");
-                        ifLearn="1";
-
-                    }else{
-                        unsetLearn();
-                        learnButton.setText("Zaznacz jako nauczone");
-                        ifLearn="0";
-                    }
-                }
-            });
-        }
-    }
 
 // click two times back to exit
     boolean isPressed=false;

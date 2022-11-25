@@ -17,8 +17,6 @@ public class Result extends AppCompatActivity {
 
     Bundle extrasBundle;
     String result;
-    String indexStr;
-    List<String> finishedQuestions = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,18 +27,11 @@ public class Result extends AppCompatActivity {
             extrasBundle =getIntent().getExtras();
             if(extrasBundle ==null){
                 result =null;
-                indexStr = null;
             }else{
                 result = extrasBundle.getString("result");
-                indexStr = extrasBundle.getString("numbersOfQuestions");
-                for(int item = 0; item < Integer.valueOf(indexStr); item++){
-                    finishedQuestions.add(extrasBundle.getString("IdQuestion" +item));
-                    finishedQuestions.add(extrasBundle.getString("AnsQuestion" +item));
-                }
             }
         }else{
             result = (String) savedInstanceState.getSerializable("result");
-            indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
         }
 
         TextView scoreTextView = (TextView) findViewById(R.id.score);
@@ -49,22 +40,8 @@ public class Result extends AppCompatActivity {
         final Button button = findViewById(R.id.end_quiz);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent activity2Intent = new Intent(getApplicationContext(), CategoryList.class);
+                Intent activity2Intent = new Intent(getApplicationContext(), InitChoose.class);
                 startActivity(activity2Intent);
-            }
-        });
-
-        final Button review = findViewById(R.id.show_answered);
-        review.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), FinishedQuiz.class);
-                intent.putExtra("result", result);
-                intent.putExtra("numbersOfQuestions", indexStr);
-                for (int item = 0; item < Integer.valueOf(indexStr); item++) {
-                    intent.putExtra("IdQuestion" +item, finishedQuestions.get(item*2));
-                    intent.putExtra("AnsQuestion" +item, finishedQuestions.get(item*2+1));
-                }
-                startActivity(intent);
             }
         });
 

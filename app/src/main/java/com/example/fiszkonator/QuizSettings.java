@@ -60,9 +60,24 @@ public class QuizSettings extends AppCompatActivity {
         TextView tytulTextView = (TextView) findViewById(R.id.setting_tittle);
         tytulTextView.setText(categoryName +"\nUstawienia");
 
+        setStats();
         setLevelSpinner();
+        setLearnLevelSpinner();
         Spinner mspin = (Spinner) findViewById(R.id.spinner_level);
         mspin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                setSpinner();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+        Spinner lspin = (Spinner) findViewById(R.id.spinner_learn_level);
+        lspin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 setSpinner();
@@ -80,11 +95,21 @@ public class QuizSettings extends AppCompatActivity {
     public void setSpinner(){
         Spinner mspin = (Spinner) findViewById(R.id.spinner_questions_number);
         Spinner levelSpinner = (Spinner) findViewById(R.id.spinner_level);
+        Spinner learnLevelSpinner = (Spinner) findViewById(R.id.spinner_learn_level);
         Integer questionsNumber;
         if(levelSpinner.getSelectedItem() == "ALL"){
-            questionsNumber = dbHelper.getQuestionsNumber(indexStr, "",option);
+            if(learnLevelSpinner.getSelectedItem() == "ALL"){
+                questionsNumber = dbHelper.getQuestionsNumber(indexStr, "","",option);
+            }else{
+                questionsNumber = dbHelper.getQuestionsNumber(indexStr, "",""+ learnLevelSpinner.getSelectedItem(),option);
+            }
         }else{
-            questionsNumber = dbHelper.getQuestionsNumber(indexStr, "" + levelSpinner.getSelectedItem(),option);
+            if(learnLevelSpinner.getSelectedItem() == "ALL"){
+                questionsNumber = dbHelper.getQuestionsNumber(indexStr, "" + levelSpinner.getSelectedItem(), "",option);
+            }else{
+                questionsNumber = dbHelper.getQuestionsNumber(indexStr, "" + levelSpinner.getSelectedItem(),""+learnLevelSpinner.getSelectedItem(),option);
+            }
+
         }
 
         Integer[] items = new Integer[questionsNumber];
@@ -101,6 +126,26 @@ public class QuizSettings extends AppCompatActivity {
         mspin.setAdapter(adapter);
         setSpinner();
     }
+    public void setLearnLevelSpinner(){
+        Spinner mspin = (Spinner) findViewById(R.id.spinner_learn_level);
+        List<String> questionsLevels = dbHelper.getLearnLevels(indexStr,option);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, questionsLevels);
+        mspin.setAdapter(adapter);
+        setSpinner();
+    }
+
+    public void setStats(){
+        TextView TextView1 = (TextView) findViewById(R.id.level_one_number);
+        TextView1.setText(dbHelper.getCountInLevel(indexStr,option,"1"));
+        TextView TextView2 = (TextView) findViewById(R.id.level_two_number);
+        TextView2.setText(dbHelper.getCountInLevel(indexStr,option,"2"));
+        TextView TextView3 = (TextView) findViewById(R.id.level_three_number);
+        TextView3.setText(dbHelper.getCountInLevel(indexStr,option,"3"));
+        TextView TextView4 = (TextView) findViewById(R.id.level_four_number);
+        TextView4.setText(dbHelper.getCountInLevel(indexStr,option,"4"));
+        TextView TextView5 = (TextView) findViewById(R.id.level_five_number);
+        TextView5.setText(dbHelper.getCountInLevel(indexStr,option,"5"));
+    }
 
     public void startQuizClick(){
         final Button button = findViewById(R.id.start_quiz);
@@ -108,16 +153,16 @@ public class QuizSettings extends AppCompatActivity {
         Spinner levelSpinner = (Spinner) findViewById(R.id.spinner_level);
         Spinner learnLevelSpinner = (Spinner) findViewById(R.id.spinner_learn_level);
         Switch randomSwitch = (Switch) findViewById(R.id.random_switch);
-        Switch trainingSwitch = (Switch) findViewById(R.id.training_switch);
+        Switch ifPolishFirstSwitch = (Switch) findViewById(R.id.if_polish_first_switch);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Quiz.class);
                 intent.putExtra("numbersOfQuestions", "" + numbersSpinner.getSelectedItem());
                 intent.putExtra("level", "" + levelSpinner.getSelectedItem());
-                intent.putExtra("Learn:evel", "" + learnLevelSpinner.getSelectedItem());
+                intent.putExtra("learnLevel", "" + learnLevelSpinner.getSelectedItem());
                 intent.putExtra("name", categoryName);
                 intent.putExtra("random", randomSwitch.isChecked());
-                intent.putExtra("training", trainingSwitch.isChecked());
+                intent.putExtra("ifPolishFirst", ifPolishFirstSwitch.isChecked());
                 intent.putExtra("option", option);
                 startActivity(intent);
             }
