@@ -11,14 +11,17 @@
         android:layout_height="match_parent">
 
         <TextView
+            android:id="@+id/question_number"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/question_number"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
             android:text="1/30"
             android:textSize="16sp"
-            android:layout_alignParentLeft="true"
-            android:textStyle="bold"
-            android:layout_margin="20dp" />
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/change_learn_button"
@@ -27,8 +30,8 @@
             android:layout_alignParentTop="true"
             android:layout_centerInParent="true"
             android:layout_marginTop="5dp"
-            android:textSize="13dp"
-            android:text="Pytanie nauczone" />
+            android:text="Pytanie nauczone"
+            android:textSize="13dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -61,6 +64,7 @@
             android:textColor="@color/correct_answer"
             android:layout_marginTop="20dp"
             android:layout_marginRight="20dp" />
+
 
         <RelativeLayout android:id="@+id/circles"
             android:layout_marginTop="-100dp"
@@ -110,12 +114,20 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="20dp"/>
 
-                <RadioGroup
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/answers">
-
-                </RadioGroup>
+                    android:id="@+id/comment"
+                    android:textSize="24sp"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/word_usage"
+                    android:textSize="24sp"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center"/>
 
             </LinearLayout>
 
@@ -137,11 +149,10 @@
                 android:layout_alignParentBottom="true"
                 android:layout_centerInParent="true"
                 android:layout_marginBottom="10dp"
-                android:text="Sprawdź" />
+                android:text="Odwróć" />
 
             <Button
                 android:id="@+id/next_question"
-                android:onClick="nextQuestionButton"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
                 android:layout_alignParentBottom="true"

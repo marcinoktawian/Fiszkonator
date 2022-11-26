@@ -77,15 +77,6 @@
 
 
             <Button
-                android:id="@+id/show_answered"
-                android:layout_width="280dp"
-                android:layout_height="50dp"
-                android:layout_alignParentBottom="true"
-                android:layout_centerInParent="true"
-                android:layout_marginBottom="10dp"
-                android:text="Pokaż odpowiedzi" />
-
-            <Button
                 android:id="@+id/end_quiz"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
