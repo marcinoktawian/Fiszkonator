@@ -48,7 +48,8 @@ public class Quiz extends AppCompatActivity {
     String comment;
     Integer questionLevel;
     Boolean showPolishNow;
-    Boolean addedToResult;
+    Boolean questionLearn;
+    Boolean questionNotLearn;
 
 
 
@@ -103,11 +104,17 @@ public class Quiz extends AppCompatActivity {
         setQuestion();
         setQuestionNumber();
 
-        final Button learnButton = findViewById(R.id.change_learn_button);
-        learnButton.setVisibility(View.GONE);
+        final Button learnButton = findViewById(R.id.learn_button);
         learnButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 learnQuestion();
+            }
+        });
+
+        final Button notLearnButton = findViewById(R.id.not_learn_button);
+        learnButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                notLearnQuestion();
             }
         });
 
@@ -138,14 +145,17 @@ public class Quiz extends AppCompatActivity {
         comment = questions.getString(2);
         questionLevel = questions.getInt(8);
         setStats(questions.getString(6),questions.getString(7));
-        final Button learnButton = findViewById(R.id.change_learn_button);
+        final Button learnButton = findViewById(R.id.learn_button);
         learnButton.setVisibility(View.GONE);
+        final Button notLearnButton = findViewById(R.id.not_learn_button);
+        notLearnButton.setVisibility(View.GONE);
         if(ifPolishFirst){
             showPolishNow = true;
         }else {
             showPolishNow = false;
         }
-        addedToResult=false;
+        questionLearn=false;
+        questionNotLearn=false;
         turnCard();
     }
 
@@ -243,6 +253,39 @@ public class Quiz extends AppCompatActivity {
     }
 
     public void learnQuestion(){
+        Button learnButton = (Button) findViewById(R.id.learn_button);
+        if(questionLevel==5) {
+            Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(!answerAlreadyChecked){
+            questionLevel++;
+            correctAnswersCounts++;
+        }
+            if(!addedToResult){
+                correctAnswersCounts++;
+                addedToResult=true;
+                upgradeCorrect();
+            }
+            learnButton.setText("Pytanie nienauczone");
+        }else{
+            if(questionLevel==1){
+                Toast.makeText(getApplicationContext(), "Min level achived", Toast.LENGTH_SHORT).show();
+            }else{
+                questionLevel--;
+            }
+            if(!addedToResult){
+                addedToResult=true;
+                upgradeError();
+            }
+            learnButton.setText("Pytanie nauczone");
+        }
+        answerAlreadyChecked=!answerAlreadyChecked;
+        values.put("PoziomNauczenia",questionLevel);
+        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
+    }
+
+    public void notLearnQuestion(){
         ContentValues values = new ContentValues();
         Button learnButton = (Button) findViewById(R.id.change_learn_button);
         if(!answerAlreadyChecked){
@@ -274,7 +317,6 @@ public class Quiz extends AppCompatActivity {
         values.put("PoziomNauczenia",questionLevel);
         db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
-
 
 //    Chek if the answear is correct and if is it traing show correct answers
     public void checkAnswer() {

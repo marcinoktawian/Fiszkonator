@@ -24,14 +24,24 @@
             android:textStyle="bold" />
 
         <Button
-            android:id="@+id/change_learn_button"
-            android:layout_width="240dp"
+            android:id="@+id/learn_button"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerInParent="true"
-            android:layout_marginTop="5dp"
-            android:text="Pytanie nauczone"
-            android:textSize="13dp" />
+            android:layout_margin="5dp"
+            android:text="nauczone"
+            android:backgroundTint="@color/level_five"
+            android:layout_toRightOf="@id/question_number"
+            android:textSize="12dp" />
+
+        <Button
+            android:id="@+id/not_learn_button"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_toRightOf="@id/learn_button"
+            android:backgroundTint="@color/level_one"
+            android:text="Nienauczone"
+            android:textSize="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -72,13 +82,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <View   android:id="@+id/circle1"
-                android:background="@drawable/circle"
-                android:alpha="0.43"
+            <View
+                android:id="@+id/circle1"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
                 android:layout_marginStart="80dp"
                 android:layout_marginTop="0dp"
-                android:layout_width="200dp"
-                android:layout_height="200dp" />
+                android:alpha="0.43"
+                android:background="@drawable/circle" />
 
             <View   android:id="@+id/circle2"
                 android:background="@drawable/circle"
