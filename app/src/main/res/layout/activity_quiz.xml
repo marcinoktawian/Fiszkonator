@@ -29,8 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:text="nauczone"
+            android:layout_toRightOf="@id/not_learn_button"
             android:backgroundTint="@color/level_five"
-            android:layout_toRightOf="@id/question_number"
             android:textSize="12dp" />
 
         <Button
@@ -38,7 +38,7 @@
             android:layout_width="130dp"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:layout_toRightOf="@id/learn_button"
+            android:layout_toRightOf="@id/question_number"
             android:backgroundTint="@color/level_one"
             android:text="Nienauczone"
             android:textSize="12dp" />
@@ -152,12 +152,18 @@
             android:layout_centerInParent="true"
             android:orientation="vertical">
 
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/play_sound"
+                android:layout_marginBottom="30dp"
+                android:src="@drawable/sound"/>
+
 
             <Button
                 android:id="@+id/check_question"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
-                android:layout_alignParentBottom="true"
                 android:layout_centerInParent="true"
                 android:layout_marginBottom="10dp"
                 android:text="Odwróć" />

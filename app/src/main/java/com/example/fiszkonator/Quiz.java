@@ -7,12 +7,15 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -50,6 +53,7 @@ public class Quiz extends AppCompatActivity {
     Boolean showPolishNow;
     Boolean questionLearn;
     Boolean questionNotLearn;
+
 
 
 
@@ -112,7 +116,7 @@ public class Quiz extends AppCompatActivity {
         });
 
         final Button notLearnButton = findViewById(R.id.not_learn_button);
-        learnButton.setOnClickListener(new View.OnClickListener() {
+        notLearnButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 notLearnQuestion();
             }
@@ -122,7 +126,7 @@ public class Quiz extends AppCompatActivity {
         final Button checkButton= findViewById(R.id.check_question);
         checkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                    checkAnswer();
+                turnCard();
             }
         });
         final Button nextButton= findViewById(R.id.next_question);
@@ -131,8 +135,12 @@ public class Quiz extends AppCompatActivity {
                 nextQuestionButton();
             }
         });
-
-
+        final ImageView soundButton = findViewById(R.id.play_sound);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                playSound();
+            }
+        });
     }
 
 //    Show question, answers and set stats
@@ -145,10 +153,6 @@ public class Quiz extends AppCompatActivity {
         comment = questions.getString(2);
         questionLevel = questions.getInt(8);
         setStats(questions.getString(6),questions.getString(7));
-        final Button learnButton = findViewById(R.id.learn_button);
-        learnButton.setVisibility(View.GONE);
-        final Button notLearnButton = findViewById(R.id.not_learn_button);
-        notLearnButton.setVisibility(View.GONE);
         if(ifPolishFirst){
             showPolishNow = true;
         }else {
@@ -173,18 +177,40 @@ public class Quiz extends AppCompatActivity {
         TextView usageTextView = (TextView) findViewById(R.id.word_usage);
         if(showPolishNow){
              wordTextView.setText(polishWord);
-             commentTextView.setText(comment);
-            commentTextView.setVisibility(View.VISIBLE);
+             if(comment != null){
+                 commentTextView.setText(comment);
+                 commentTextView.setVisibility(View.VISIBLE);
+             }else{
+                 commentTextView.setVisibility(View.GONE);
+             }
              usageTextView.setText(polishUsage);
         }else{
             wordTextView.setText(foreignWord);
             commentTextView.setVisibility(View.GONE);
             usageTextView.setText(foreignUsage);
         }
+        showPolishNow=!showPolishNow;
     }
 
 //    If this is last question go to result if not show next question
     public void nextQuestionButton() {
+        ContentValues values = new ContentValues();
+        if(questionLearn){
+            upgradeCorrect();
+            correctAnswersCounts++;
+            if(questionLevel<5){
+                questionLevel++;
+                values.put("PoziomNauczenia",questionLevel);
+                db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
+            }
+        }else{
+            upgradeError();
+            if(questionLevel>1){
+                questionLevel--;
+                values.put("PoziomNauczenia",questionLevel);
+                db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
+            }
+        }
         if (index == Integer.parseInt(indexStr)) {
             db.close();
             Intent intent = new Intent(getApplicationContext(), Result.class);
@@ -253,84 +279,33 @@ public class Quiz extends AppCompatActivity {
     }
 
     public void learnQuestion(){
-        Button learnButton = (Button) findViewById(R.id.learn_button);
-        if(questionLevel==5) {
-            Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if(!answerAlreadyChecked){
-            questionLevel++;
-            correctAnswersCounts++;
-        }
-            if(!addedToResult){
-                correctAnswersCounts++;
-                addedToResult=true;
-                upgradeCorrect();
+        if(!questionLearn){
+            questionLearn = true;
+            questionNotLearn = false;
+            if(questionLevel==5) {
+                Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
+                return;
             }
-            learnButton.setText("Pytanie nienauczone");
+            Toast.makeText(getApplicationContext(), "Fiszka nauczona", Toast.LENGTH_SHORT).show();
         }else{
-            if(questionLevel==1){
-                Toast.makeText(getApplicationContext(), "Min level achived", Toast.LENGTH_SHORT).show();
-            }else{
-                questionLevel--;
-            }
-            if(!addedToResult){
-                addedToResult=true;
-                upgradeError();
-            }
-            learnButton.setText("Pytanie nauczone");
+            Toast.makeText(getApplicationContext(), "Fiszka już oznaczona jako nienauczona", Toast.LENGTH_SHORT).setGravity(Gravity.TOP|Gravity.LEFT, 0, 0);
         }
-        answerAlreadyChecked=!answerAlreadyChecked;
-        values.put("PoziomNauczenia",questionLevel);
-        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
     public void notLearnQuestion(){
-        ContentValues values = new ContentValues();
-        Button learnButton = (Button) findViewById(R.id.change_learn_button);
-        if(!answerAlreadyChecked){
-            if(questionLevel==5){
-                Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
-                return;
-            }else{
-                questionLevel++;
-            }
-            if(!addedToResult){
-                correctAnswersCounts++;
-                addedToResult=true;
-                upgradeCorrect();
-            }
-            learnButton.setText("Pytanie nienauczone");
-        }else{
-            if(questionLevel==1){
+        if(!questionNotLearn){
+            questionNotLearn = true;
+            questionLearn = false;
+            if(questionLevel==1) {
                 Toast.makeText(getApplicationContext(), "Min level achived", Toast.LENGTH_SHORT).show();
-            }else{
-                questionLevel--;
+                return;
             }
-            if(!addedToResult){
-                addedToResult=true;
-                upgradeError();
-            }
-            learnButton.setText("Pytanie nauczone");
+            Toast.makeText(getApplicationContext(), "Fiszka nienauczona", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(), "Fiszka już oznaczona jako nienauczona", Toast.LENGTH_SHORT).show();
         }
-        answerAlreadyChecked=!answerAlreadyChecked;
-        values.put("PoziomNauczenia",questionLevel);
-        db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
-//    Chek if the answear is correct and if is it traing show correct answers
-    public void checkAnswer() {
-        showPolishNow=!showPolishNow;
-        final Button learnButton = findViewById(R.id.change_learn_button);
-        learnButton.setVisibility(View.VISIBLE);
-        if(questionLevel == 5 ){
-            answerAlreadyChecked=true;
-            learnButton.setText("Pytanie nienauczone");
-        }else{
-            learnButton.setText("Pytanie nauczone");
-        }
-        turnCard();
-    }
 
     //    Upgrade number of wrong answers in database
     public void upgradeError(){
@@ -360,6 +335,11 @@ public class Quiz extends AppCompatActivity {
         ContentValues values = new ContentValues();
         values.put("IloscPrawidlowychOdp",cardnum);
         db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
+    }
+
+    public void playSound(){
+        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.Starter_001_ser);
+        mp.start();
     }
 
 
