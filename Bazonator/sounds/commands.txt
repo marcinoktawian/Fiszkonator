@@ -1,0 +1,13 @@
+for f in *\ *; do mv "$f" "${f// /_}"; done
+
+mv -v */* .
+
+rm -r */
+
+for file in *; do mv -v ${file} starter_${file}; done
+
+for file in *; 
+do
+    new_name=`echo $file| cut -d"_" -f1,2`
+    mv -v ${file} ${new_name}.mp3; 
+done
