@@ -109,19 +109,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public List<String> getAllNames(String TB_NAME){
+    public List<String> getAllNames(String TB_NAME, String starter) {
         List<String> listUsers = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
 
         try {
-            c = db.rawQuery("SELECT * FROM " + TB_NAME , null);
-            if(c == null) return null;
+            if (!starter.equals("")) {
+                listUsers.add("0");
+                listUsers.add("ALL");
+
+                c = db.rawQuery("SELECT distinct k.* FROM Kategoria k JOIN FISZKA f ON k.IdKategorii = f.IdKategorii JOIN Zestaw z ON z.IdZestawu=f.IdZestawu WHERE z.NazwaZestawu = \"" + starter + "\"", null);
+            } else {
+                c = db.rawQuery("SELECT * FROM " + TB_NAME, null);
+            }
+            if (c == null) return null;
 
             String name;
+            String id;
             c.moveToFirst();
+
             do {
+                id = c.getString(0);
                 name = c.getString(1);
+                listUsers.add(id);
                 listUsers.add(name);
             } while (c.moveToNext());
             c.close();
@@ -134,34 +145,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public Integer getQuestionsNumber(String idOpcji, String level, String learnLevel, String option){
+    public Integer getQuestionsNumber(String idOpcji, String level, String learnLevel, String option) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
         String TB_NAME = "Fiszka";
-        String countStr="0";
+        String countStr = "0";
         String optionQuery;
-        if(option.equals("Kategoria")){
+        if (option.equals("Kategoria")) {
             optionQuery = " WHERE IdKategorii = " + idOpcji;
-        }else{
+        } else {
             optionQuery = " WHERE IdZestawu = " + idOpcji;
         }
 
         try {
             if (level.equals("")) {
-                if(learnLevel.equals("")){
+                if (learnLevel.equals("")) {
                     c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + optionQuery, null);
-                }else{
+                } else {
                     c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki" + optionQuery + " AND s.PoziomNauczenia = " + learnLevel, null);
                 }
 
             } else {
-                if(learnLevel.equals("")){
+                if (learnLevel.equals("")) {
                     c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + optionQuery + " AND Poziom = \"" + level + "\"", null);
-                }else{
-                    c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki"+ optionQuery + " AND f.Poziom = \"" + level + "\" AND s.PoziomNauczenia = " + learnLevel, null);
+                } else {
+                    c = db.rawQuery("SELECT COUNT(*) FROM " + TB_NAME + " f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki" + optionQuery + " AND f.Poziom = \"" + level + "\" AND s.PoziomNauczenia = " + learnLevel, null);
                 }
             }
-            if(c == null) return null;
+            if (c == null) return null;
 
             c.moveToFirst();
             countStr = c.getString(0);
@@ -173,18 +184,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return Integer.parseInt(countStr);
     }
 
-    public List<String> getQuestionsLevels(String idOpcji, String option){
+    public List<String> getQuestionsLevels(String idOpcji, String option) {
         List<String> listLevels = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
         listLevels.add("ALL");
         try {
-            if (option.equals("Kategoria")){
+            if (option.equals("Kategoria")) {
                 c = db.rawQuery("SELECT DISTINCT Poziom FROM Fiszka WHERE IdKategorii = " + idOpcji + " ORDER BY Poziom DESC", null);
-            }else{
+            } else {
                 c = db.rawQuery("SELECT DISTINCT Poziom FROM Fiszka WHERE IdZestawu = " + idOpcji + " ORDER BY Poziom DESC", null);
             }
-            if(c == null) return listLevels;
+            if (c == null) return listLevels;
             String name;
             c.moveToFirst();
             do {
@@ -199,18 +210,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listLevels;
     }
 
-    public List<String> getLearnLevels(String idOpcji, String option){
+    public List<String> getLearnLevels(String idOpcji, String option) {
         List<String> listLevels = new ArrayList<String>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor c;
         listLevels.add("ALL");
         try {
-            if (option.equals("Kategoria")){
+            if (option.equals("Kategoria")) {
                 c = db.rawQuery("SELECT DISTINCT s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki WHERE f.IdKategorii = " + idOpcji + " ORDER BY s.PoziomNauczenia DESC", null);
-            }else{
+            } else {
                 c = db.rawQuery("SELECT DISTINCT s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki WHERE f.IdZestawu = " + idOpcji + " ORDER BY s.PoziomNauczenia DESC", null);
             }
-            if(c == null) return listLevels;
+            if (c == null) return listLevels;
             String name;
             c.moveToFirst();
             do {
@@ -225,17 +236,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listLevels;
     }
 
-    public String getCountInLevel(String idOpcji, String option, String level){
+    public String getCountInLevel(String idOpcji, String option, String level) {
         SQLiteDatabase db = this.getWritableDatabase();
         String count = "0";
         Cursor c;
         try {
-            if (option.equals("Kategoria")){
-                c = db.rawQuery("SELECT COUNT(*) FROM Fiszka f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki WHERE f.IdKategorii = " + idOpcji + " AND s.PoziomNauczenia = " + level , null);
-            }else{
+            if (option.equals("Kategoria")) {
+                c = db.rawQuery("SELECT COUNT(*) FROM Fiszka f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki WHERE f.IdKategorii = " + idOpcji + " AND s.PoziomNauczenia = " + level, null);
+            } else {
                 c = db.rawQuery("SELECT COUNT(*) FROM Fiszka f JOIN Statystyki s ON f.IdFiszki = s.IdFiszki WHERE f.IdZestawu = " + idOpcji + " AND s.PoziomNauczenia = " + level, null);
             }
-            if(c == null) return "0";
+            if (c == null) return "0";
             c.moveToFirst();
             count = c.getString(0);
             c.close();

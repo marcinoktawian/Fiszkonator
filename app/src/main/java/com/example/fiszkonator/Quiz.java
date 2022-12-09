@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.FaceDetector;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +28,7 @@ public class Quiz extends AppCompatActivity {
     String learnLevel;
     String categoryName;
     Boolean random;
+    Boolean uncommon;
     Boolean ifPolishFirst;
     String option;
     Integer index = 0;
@@ -48,8 +50,7 @@ public class Quiz extends AppCompatActivity {
     Boolean questionLearn;
     Boolean questionNotLearn;
     MediaPlayer mp;
-
-
+    Boolean canNext;
 
 
     @Override
@@ -71,9 +72,10 @@ public class Quiz extends AppCompatActivity {
             if (extrasBundle == null) {
                 indexStr = null;
                 difficultyLevel = null;
-                learnLevel= null;
+                learnLevel = null;
                 categoryName = null;
                 random = null;
+                uncommon = null;
                 option = null;
                 ifPolishFirst = null;
             } else {
@@ -82,8 +84,9 @@ public class Quiz extends AppCompatActivity {
                 learnLevel = extrasBundle.getString("learnLevel");
                 categoryName = extrasBundle.getString("name");
                 random = extrasBundle.getBoolean("random");
+                uncommon = extrasBundle.getBoolean("uncommon");
                 option = extrasBundle.getString("option");
-                ifPolishFirst= extrasBundle.getBoolean("ifPolishFirst");
+                ifPolishFirst = extrasBundle.getBoolean("ifPolishFirst");
             }
         } else {
             indexStr = (String) savedInstanceState.getSerializable("numbersOfQuestions");
@@ -91,21 +94,23 @@ public class Quiz extends AppCompatActivity {
             learnLevel = (String) savedInstanceState.getSerializable("learnLevel");
             categoryName = (String) savedInstanceState.getSerializable("name");
             random = (Boolean) savedInstanceState.getSerializable("random");
+            uncommon = (Boolean) savedInstanceState.getSerializable("uncommon");
             option = (String) savedInstanceState.getSerializable("option");
-            ifPolishFirst= (Boolean) savedInstanceState.getSerializable("ifPolishFirst");
+            ifPolishFirst = (Boolean) savedInstanceState.getSerializable("ifPolishFirst");
         }
 
 //        Get questions and show the first one
         questions = this.getQuestions(categoryName, indexStr);
         questions.moveToFirst();
 
-        answerAlreadyChecked=false;
+        answerAlreadyChecked = false;
         setQuestion();
         setQuestionNumber();
 
         final Button learnButton = findViewById(R.id.learn_button);
         learnButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                canNext = true;
                 learnQuestion();
             }
         });
@@ -113,21 +118,34 @@ public class Quiz extends AppCompatActivity {
         final Button notLearnButton = findViewById(R.id.not_learn_button);
         notLearnButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                canNext = true;
                 notLearnQuestion();
             }
         });
 
 //        If set training the button won't show
-        final Button checkButton= findViewById(R.id.check_question);
+        final Button checkButton = findViewById(R.id.check_question);
         checkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                canNext = true;
                 turnCard();
             }
         });
-        final Button nextButton= findViewById(R.id.next_question);
+        final Button nextButton = findViewById(R.id.next_question);
         nextButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                nextQuestionButton();
+                if (canNext) {
+                    nextQuestionButton();
+                } else {
+                    canNext = true;
+                    Toast.makeText(getApplicationContext(), "Na pewno? Nie zaznaczono odpowiedzi", Toast.LENGTH_SHORT).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            canNext = false;
+                        }
+                    }, 2000);
+                }
             }
         });
         final ImageView soundButton = findViewById(R.id.play_sound);
@@ -138,83 +156,84 @@ public class Quiz extends AppCompatActivity {
         });
     }
 
-//    Show question, answers and set stats
+    //    Show question, answers and set stats
     public void setQuestion() {
-        questionId =questions.getString(0);
-        polishWord =questions.getString(1);
-        foreignWord =questions.getString(4);
-        polishUsage =questions.getString(3);
-        foreignUsage=questions.getString(6);
+        questionId = questions.getString(0);
+        polishWord = questions.getString(1);
+        foreignWord = questions.getString(4);
+        polishUsage = questions.getString(3);
+        foreignUsage = questions.getString(6);
         polishComment = questions.getString(2);
         foreignComment = questions.getString(5);
         questionLevel = questions.getInt(9);
-        setStats(questions.getString(7),questions.getString(8));
+        setStats(questions.getString(7), questions.getString(8));
         nagranie = questions.getString(10);
-        if(ifPolishFirst){
+        if (ifPolishFirst) {
             showPolishNow = true;
-        }else {
+        } else {
             showPolishNow = false;
         }
-        questionLearn=false;
-        questionNotLearn=false;
+        questionLearn = false;
+        questionNotLearn = false;
+        canNext = false;
         turnCard();
     }
 
-//    Set stats wrong/correct number of answers
-    public void setStats(String wrong, String correct){
+    //    Set stats wrong/correct number of answers
+    public void setStats(String wrong, String correct) {
         TextView wrongTextView = (TextView) findViewById(R.id.wrong_stats_number);
         TextView correctTextView = (TextView) findViewById(R.id.correct_stats_number);
         wrongTextView.setText(wrong);
         correctTextView.setText(correct);
     }
 
-    public void turnCard(){
+    public void turnCard() {
         TextView wordTextView = (TextView) findViewById(R.id.question);
         TextView commentTextView = (TextView) findViewById(R.id.comment);
         TextView usageTextView = (TextView) findViewById(R.id.word_usage);
-        if(showPolishNow){
-             wordTextView.setText(polishWord);
-             if(polishComment != null){
-                 commentTextView.setText(polishComment);
-                 commentTextView.setVisibility(View.VISIBLE);
-             }else{
-                 commentTextView.setVisibility(View.GONE);
-             }
-             usageTextView.setText(polishUsage);
-        }else{
+        if (showPolishNow) {
+            wordTextView.setText(polishWord);
+            if (polishComment != null) {
+                commentTextView.setText(polishComment);
+                commentTextView.setVisibility(View.VISIBLE);
+            } else {
+                commentTextView.setVisibility(View.GONE);
+            }
+            usageTextView.setText(polishUsage);
+        } else {
             wordTextView.setText(foreignWord);
-            if(foreignComment != null){
+            if (foreignComment != null) {
                 commentTextView.setText(foreignComment);
                 commentTextView.setVisibility(View.VISIBLE);
-            }else{
+            } else {
                 commentTextView.setVisibility(View.GONE);
             }
             usageTextView.setText(foreignUsage);
         }
-        showPolishNow=!showPolishNow;
+        showPolishNow = !showPolishNow;
     }
 
-//    If this is last question go to result if not show next question
+    //    If this is last question go to result if not show next question
     public void nextQuestionButton() {
         ContentValues values = new ContentValues();
-        try{
+        try {
             mp.stop();
-        }catch(Exception e) {
+        } catch (Exception e) {
             Log.e("tle99", e.getMessage());
         }
-        if(questionLearn){
+        if (questionLearn) {
             upgradeCorrect();
             correctAnswersCounts++;
-            if(questionLevel<5){
+            if (questionLevel < 5) {
                 questionLevel++;
-                values.put("PoziomNauczenia",questionLevel);
+                values.put("PoziomNauczenia", questionLevel);
                 db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
             }
-        }else{
+        } else {
             upgradeError();
-            if(questionLevel>1){
+            if (questionLevel > 1) {
                 questionLevel--;
-                values.put("PoziomNauczenia",questionLevel);
+                values.put("PoziomNauczenia", questionLevel);
                 db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
             }
         }
@@ -224,58 +243,49 @@ public class Quiz extends AppCompatActivity {
             intent.putExtra("result", correctAnswersCounts + "/" + indexStr);
             startActivity(intent);
         } else {
-            answerAlreadyChecked=false;
+            answerAlreadyChecked = false;
             questions.moveToNext();
             setQuestionNumber();
             setQuestion();
         }
     }
 
-//    Set question index count
+    //    Set question index count
     public void setQuestionNumber() {
         index++;
         TextView countingTextView = (TextView) findViewById(R.id.question_number);
         countingTextView.setText(index + "/" + indexStr);
     }
 
-//    Get question numbers depend of settings
+    //    Get question numbers depend of settings
     public Cursor getQuestions(String nazwaOpcji, String limit) {
         Cursor c = null;
         String optionQuery = "";
-        if (option.equals("Kategoria")){
+        if (option.equals("Kategoria")) {
             optionQuery = "JOIN Kategoria k ON k.IdKategorii=f.IdKategorii where k.NazwaKategorii = \"" + nazwaOpcji;
-        }else{
+        } else {
             optionQuery = "JOIN Zestaw z ON z.idZestawu=f.idZestawu where z.NazwaZestawu = \"" + nazwaOpcji;
+        }
+        String orderQuery = "";
+        if (random) {
+            orderQuery = " ORDER BY RANDOM()";
+        }
+        if (uncommon) {
+            orderQuery = " ORDER BY ( s.IloscBlednychOdp+s.IloscPrawidlowychOdp) ASC";
         }
 
         try {
-            if (random) {
-                if(difficultyLevel.equals("ALL")){
-                    if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" ORDER BY RANDOM() LIMIT " + limit, null);
-                    }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
-                    }
-                }else{
-                    if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" ORDER BY RANDOM() LIMIT " + limit, null);
-                    }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
-                    }
+            if (difficultyLevel.equals("ALL")) {
+                if (learnLevel.equals("ALL")) {
+                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\"" + orderQuery + " LIMIT " + limit, null);
+                } else {
+                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = " + learnLevel + orderQuery + " LIMIT " + limit, null);
                 }
-            }else{
-                if(difficultyLevel.equals("ALL")){
-                    if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" LIMIT " + limit, null);
-                    }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
-                    }
-                }else{
-                    if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" LIMIT " + limit, null);
-                    }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
-                    }
+            } else {
+                if (learnLevel.equals("ALL")) {
+                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\"" + orderQuery + "LIMIT " + limit, null);
+                } else {
+                    c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = " + learnLevel + orderQuery + " LIMIT " + limit, null);
                 }
             }
             if (c == null) return null;
@@ -285,67 +295,65 @@ public class Quiz extends AppCompatActivity {
         return c;
     }
 
-    public void learnQuestion(){
-        if(!questionLearn){
+    public void learnQuestion() {
+        if (!questionLearn) {
             questionLearn = true;
             questionNotLearn = false;
-            if(questionLevel==5) {
+            if (questionLevel == 5) {
                 Toast.makeText(getApplicationContext(), "Max level achived", Toast.LENGTH_SHORT).show();
                 return;
             }
             Toast.makeText(getApplicationContext(), "Fiszka nauczona", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(getApplicationContext(), "Fiszka już oznaczona jako nienauczona", Toast.LENGTH_SHORT).setGravity(Gravity.TOP|Gravity.LEFT, 0, 0);
+        } else {
+            Toast.makeText(getApplicationContext(), "Fiszka już oznaczona jako nienauczona", Toast.LENGTH_SHORT).setGravity(Gravity.TOP | Gravity.LEFT, 0, 0);
         }
     }
 
-    public void notLearnQuestion(){
-        if(!questionNotLearn){
+    public void notLearnQuestion() {
+        if (!questionNotLearn) {
             questionNotLearn = true;
             questionLearn = false;
-            if(questionLevel==1) {
+            if (questionLevel == 1) {
                 Toast.makeText(getApplicationContext(), "Min level achived", Toast.LENGTH_SHORT).show();
                 return;
             }
             Toast.makeText(getApplicationContext(), "Fiszka nienauczona", Toast.LENGTH_SHORT).show();
-        }else{
+        } else {
             Toast.makeText(getApplicationContext(), "Fiszka już oznaczona jako nienauczona", Toast.LENGTH_SHORT).show();
         }
     }
 
 
     //    Upgrade number of wrong answers in database
-    public void upgradeError(){
-        Cursor cursor =db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
-        int cardnum=0;
+    public void upgradeError() {
+        Cursor cursor = db.rawQuery("SELECT IloscBlednychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
+        int cardnum = 0;
         cursor.moveToFirst();
-        if( cursor != null )
-        {
+        if (cursor != null) {
             cardnum = cursor.getInt(0);
             cardnum++;
         }
         ContentValues values = new ContentValues();
-        values.put("IloscBlednychOdp",cardnum);
+        values.put("IloscBlednychOdp", cardnum);
         db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
     //    Upgrade number of correct answers in database
-    public void upgradeCorrect(){
-        Cursor cursor =db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
-        int cardnum=0;
+    public void upgradeCorrect() {
+        Cursor cursor = db.rawQuery("SELECT IloscPrawidlowychOdp FROM Statystyki WHERE IdFiszki = " + questionId, null);
+        int cardnum = 0;
         cursor.moveToFirst();
-        if( cursor != null )
-        {
+        if (cursor != null) {
             cardnum = cursor.getInt(0);
             cardnum++;
         }
         ContentValues values = new ContentValues();
-        values.put("IloscPrawidlowychOdp",cardnum);
+        values.put("IloscPrawidlowychOdp", cardnum);
         db.update("Statystyki", values, "IdFiszki = ?", new String[]{questionId});
     }
 
-    public void playSound(){
-        try{
+    public void playSound() {
+        try {
             mp = MediaPlayer.create(getApplicationContext(), getResources().getIdentifier(nagranie, "raw", getPackageName()));
             mp.start();
         } catch (Exception e) {
@@ -355,13 +363,14 @@ public class Quiz extends AppCompatActivity {
     }
 
 
-// click two times back to exit
-    boolean isPressed=false;
+    // click two times back to exit
+    boolean isPressed = false;
+
     public void onBackPressed() {
-        if (isPressed){
+        if (isPressed) {
             finishAffinity();
             System.exit(0);
-        }else {
+        } else {
             isPressed = true;
             Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
