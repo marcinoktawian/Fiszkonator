@@ -1,7 +1,6 @@
 package com.example.fiszkonator;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -13,19 +12,12 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Quiz extends AppCompatActivity {
 
@@ -48,11 +40,14 @@ public class Quiz extends AppCompatActivity {
     String foreignWord;
     String polishUsage;
     String foreignUsage;
-    String comment;
+    String polishComment;
+    String foreignComment;
+    String nagranie;
     Integer questionLevel;
     Boolean showPolishNow;
     Boolean questionLearn;
     Boolean questionNotLearn;
+    MediaPlayer mp;
 
 
 
@@ -136,7 +131,7 @@ public class Quiz extends AppCompatActivity {
             }
         });
         final ImageView soundButton = findViewById(R.id.play_sound);
-        nextButton.setOnClickListener(new View.OnClickListener() {
+        soundButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 playSound();
             }
@@ -149,10 +144,12 @@ public class Quiz extends AppCompatActivity {
         polishWord =questions.getString(1);
         foreignWord =questions.getString(4);
         polishUsage =questions.getString(3);
-        foreignUsage=questions.getString(5);
-        comment = questions.getString(2);
-        questionLevel = questions.getInt(8);
-        setStats(questions.getString(6),questions.getString(7));
+        foreignUsage=questions.getString(6);
+        polishComment = questions.getString(2);
+        foreignComment = questions.getString(5);
+        questionLevel = questions.getInt(9);
+        setStats(questions.getString(7),questions.getString(8));
+        nagranie = questions.getString(10);
         if(ifPolishFirst){
             showPolishNow = true;
         }else {
@@ -177,8 +174,8 @@ public class Quiz extends AppCompatActivity {
         TextView usageTextView = (TextView) findViewById(R.id.word_usage);
         if(showPolishNow){
              wordTextView.setText(polishWord);
-             if(comment != null){
-                 commentTextView.setText(comment);
+             if(polishComment != null){
+                 commentTextView.setText(polishComment);
                  commentTextView.setVisibility(View.VISIBLE);
              }else{
                  commentTextView.setVisibility(View.GONE);
@@ -186,7 +183,12 @@ public class Quiz extends AppCompatActivity {
              usageTextView.setText(polishUsage);
         }else{
             wordTextView.setText(foreignWord);
-            commentTextView.setVisibility(View.GONE);
+            if(foreignComment != null){
+                commentTextView.setText(foreignComment);
+                commentTextView.setVisibility(View.VISIBLE);
+            }else{
+                commentTextView.setVisibility(View.GONE);
+            }
             usageTextView.setText(foreignUsage);
         }
         showPolishNow=!showPolishNow;
@@ -195,6 +197,11 @@ public class Quiz extends AppCompatActivity {
 //    If this is last question go to result if not show next question
     public void nextQuestionButton() {
         ContentValues values = new ContentValues();
+        try{
+            mp.stop();
+        }catch(Exception e) {
+            Log.e("tle99", e.getMessage());
+        }
         if(questionLearn){
             upgradeCorrect();
             correctAnswersCounts++;
@@ -245,29 +252,29 @@ public class Quiz extends AppCompatActivity {
             if (random) {
                 if(difficultyLevel.equals("ALL")){
                     if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" ORDER BY RANDOM() LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
                     }
                 }else{
                     if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" ORDER BY RANDOM() LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " ORDER BY RANDOM() LIMIT " + limit, null);
                     }
                 }
             }else{
                 if(difficultyLevel.equals("ALL")){
                     if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
                     }
                 }else{
                     if(learnLevel.equals("ALL")){
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" LIMIT " + limit, null);
                     }else{
-                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.Komentarz, f.Uzyciepolski, f.Obcy, f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
+                        c = db.rawQuery("SELECT f.IdFiszki, f.Polski, f.KomentarzPolski, f.Uzyciepolski, f.Obcy, f.KomentarzObcy,f.UzycieObcy, s.IloscBlednychOdp, s.IloscPrawidlowychOdp, s.PoziomNauczenia, f.Nagranie FROM Fiszka f JOIN Statystyki s ON s.IdFiszki=f.IdFiszki " + optionQuery + "\" AND f.Poziom = \"" + difficultyLevel + "\" AND s.PoziomNauczenia = "+ learnLevel + " LIMIT " + limit, null);
                     }
                 }
             }
@@ -338,8 +345,13 @@ public class Quiz extends AppCompatActivity {
     }
 
     public void playSound(){
-        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.Starter_001_ser);
-        mp.start();
+        try{
+            mp = MediaPlayer.create(getApplicationContext(), getResources().getIdentifier(nagranie, "raw", getPackageName()));
+            mp.start();
+        } catch (Exception e) {
+            Log.e("tle99", e.getMessage());
+            Toast.makeText(getApplicationContext(), "Brak nagrania audio", Toast.LENGTH_SHORT).show();
+        }
     }
 
 

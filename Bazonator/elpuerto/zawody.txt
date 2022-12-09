@@ -1,0 +1,149 @@
+el trabajador
+pracownik
+
+el gerente
+menedżer, kierownik
+
+el director
+dyrektor
+
+la secretaria
+sekretarka
+
+el contable
+księgowy
+
+el funcionario
+funkcjonariusz, urzędnik
+
+el informático
+informatyk
+
+el administrador
+pracownik administracyjny
+
+el corredor de bolsa
+makler giełdowy
+
+el representante comercial
+przedstawiciel handlowy
+
+el agente publicitario
+agent reklamowy
+
+el comerciante
+handlowiec
+
+el abogado
+prawnik
+
+el abogado defensor
+adwokat
+
+el fiscal
+prokurator
+
+el juez
+sędzia
+
+el actor
+aktor
+
+el pintor
+malarz
+
+el cantante
+piosenkarz, śpiewak
+
+el músico
+muzyk
+
+el fotógrafo
+fotograf
+
+la modelo
+modelka
+
+el diseñador
+projektant
+
+el arquitecto
+architekt
+
+el intérprete
+tłumacz ustny
+
+el traductor
+tłumacz
+
+el escritor
+pisarz
+
+el editor
+redaktor
+
+el periodista
+dziennikarz
+
+el médico
+lekarz
+
+la enfermera
+pielęgniarka
+
+el dentista
+dentysta
+
+el policía
+policjant
+
+el bombero
+strażak
+
+el veterinario
+weterynarz
+
+el cocinero
+kucharz
+
+el camarero
+kelner
+
+el dependiente
+sprzedawca
+
+el cartero
+listonosz
+
+el empleado de hogar
+pomoc domowa
+
+el peluquero
+fryzjer
+
+el fontanero
+hudraulik
+
+el electricista
+elektryk
+
+el mecánico
+mechanik
+
+el ingeniero
+Inżynier
+
+el agricultor
+rolnik
+
+el autónomo
+pracownik samodzielny, freelancer
+
+el obrero
+robotnik
+
+el albañil
+murarz, robotnik
+
+spanish
+polish

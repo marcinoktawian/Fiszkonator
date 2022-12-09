@@ -1,0 +1,80 @@
+la oficina
+biuro
+
+el despacho
+gabinet
+
+la administración pública
+administracja publiczna
+
+el ayuntamiento
+urząd miasta
+
+el parque de bomberos
+remiza strażacka
+
+la comisaría de policía
+posterunek policji
+
+la escuela
+szkoła
+
+la universidad
+uniwersytet
+
+la cocina
+kuchnia
+
+el restaurante
+restauracja
+
+el bar
+bar
+
+la tienda
+sklep
+
+el mercado
+targ
+
+el estudio de arquitectura
+biuro architektoniczne
+
+el estudio de fotografía
+studio fotograficzne
+
+la empresa pequeña
+małe przedsiębiorstwo
+
+la empresa mediana
+średnie przedsiębiorstwo
+
+la empresa multinacional
+firma międzynarodowa
+
+la empresa constructora
+firma budowlana
+
+la inmobiliaria
+biuro nieruchomości
+
+el taller
+warsztat
+
+la obra
+budowa
+
+el centro médico
+centrum medyczne
+
+el juzgado
+sąd
+
+la imprenta
+drukamia
+
+la editorial
+wydawnictwo
+
+spanish
+polish
