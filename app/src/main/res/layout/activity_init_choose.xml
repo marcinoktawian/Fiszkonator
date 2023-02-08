@@ -38,30 +38,28 @@
         </RelativeLayout>
 
 
-
         <LinearLayout
+            android:id="@+id/choose_buttons_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/choose_buttons_layout"
             android:gravity="center"
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/select_package_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20pt"
                 android:layout_marginVertical="5dp"
-                android:id="@+id/select_package_button"
-                android:text="Zestawy"/>
+                android:text="Zestawy" />
 
             <Button
+                android:id="@+id/select_category_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20pt"
                 android:layout_marginVertical="5dp"
-                android:id="@+id/select_category_button"
                 android:text="Kategorie" />
-
 
 
         </LinearLayout>

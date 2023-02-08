@@ -16,8 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="-100dp"
-            android:layout_marginTop="-100dp"
-            >
+            android:layout_marginTop="-100dp">
 
             <View
                 android:id="@+id/circle1"
@@ -48,23 +47,23 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="20dp"
                 android:gravity="center"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
                 android:text="WYNIK:"
-                android:layout_margin="20dp"/>
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/score"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/score"
+                android:layout_margin="20dp"
                 android:gravity="center"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
                 android:text="20/30"
-                android:layout_margin="20dp"/>
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 

@@ -34,13 +34,15 @@ public class InitChoose extends AppCompatActivity {
             }
         });
     }
+
     //    Click two times back to exit
-    boolean isPressed=false;
+    boolean isPressed = false;
+
     public void onBackPressed() {
-        if (isPressed){
+        if (isPressed) {
             finishAffinity();
             System.exit(0);
-        }else {
+        } else {
             isPressed = true;
             Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {

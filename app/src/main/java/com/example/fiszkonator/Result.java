@@ -23,14 +23,14 @@ public class Result extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
-        if(savedInstanceState==null){
-            extrasBundle =getIntent().getExtras();
-            if(extrasBundle ==null){
-                result =null;
-            }else{
+        if (savedInstanceState == null) {
+            extrasBundle = getIntent().getExtras();
+            if (extrasBundle == null) {
+                result = null;
+            } else {
                 result = extrasBundle.getString("result");
             }
-        }else{
+        } else {
             result = (String) savedInstanceState.getSerializable("result");
         }
 
@@ -46,13 +46,14 @@ public class Result extends AppCompatActivity {
         });
 
     }
-    boolean isPressed=false;
+
+    boolean isPressed = false;
 
     public void onBackPressed() {
-        if (isPressed){
+        if (isPressed) {
             finishAffinity();
             System.exit(0);
-        }else {
+        } else {
             isPressed = true;
             Toast.makeText(getApplicationContext(), "Press again to exit", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
